@@ -3390,7 +3390,7 @@ ENTITY CiscV IS
         m_active:OUT std_logic_vector(0 downto 0);
         addr:OUT std_logic_vector(1 downto 0);
         m_data:OUT std_logic_vector(1 downto 0);
-        clk_out:OUT std_logic_vector(0 downto 0);
+        --clk_out:OUT std_logic_vector(0 downto 0);
         --Temporary signals
         rd_data_out:OUT std_logic_vector(4 downto 0);
         rs1_data_out:OUT std_logic_vector(4 downto 0);
@@ -3545,12 +3545,12 @@ BEGIN
                   ("00000000000000000000" & imm12_data(11 downto 0));
    addr <= internal_addr;
    m_data <= internal_m_data;
-   send_clock: process(clk, send_clk)
-   begin
-      if send_clk = "1" then
-         clk_out(0) <= clk;
-      end if;
-   end process;
+   --send_clock: process(clk, send_clk)
+   --begin
+      --if send_clk = "1" then
+         --clk_out(0) <= clk;
+      --end if;
+   --end process;
    control_signal_handler: process(clk)
    begin
       rd_data_out <= rd_data;
