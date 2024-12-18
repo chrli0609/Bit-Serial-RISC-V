@@ -15,14 +15,16 @@ set LIB_PATH $LOCAL_DIR/models/liberty/
 set LIBRARY  {KISTA_SOI_STDLIB2_CCS_TT.lib}
 set OPERATING_CONDITION {PVT_1P8V_25C}
 
-set FILE_LIST {program_package.vhdl CiscV.vhdl}
+#set FILE_LIST {program_package.vhdl CiscV.vhdl}
+set FILE_LIST {program_package.vhdl types_pkg.vhd CiscV.vhdl bs_interface.vhd BRISC_top_no_io.vhdl}
 
 
 #set SYN_EFFORT   high
 #set MAP_EFFORT   high
 
 
-set DESIGN       CiscV
+set DESIGN       BRISC_top
+#set DESIGN       CiscV
 set THE_DATE  [exec date +%m%d.%H%M]
 
 # *********************************************************

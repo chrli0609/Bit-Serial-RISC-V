@@ -96,19 +96,19 @@ syn_opt
 #--------------------
 
 #write out verilog netlists and constraints
-write_hdl > genus_output/CiscV_synth.v
-write_sdc > genus_output/design.sdc
-write_script > genus_output/design.genus_const.tcl
+write_hdl > genus_output/$DESIGN_synth.v
+write_sdc > genus_output/$DESIGN_design.sdc
+write_script > genus_output/$DESIGN_design.genus_const.tcl
 
 # report_timing -lint -verbose
 
-report_timing > genus_output/synth_timing.rpt	
-report_area   > genus_output/synth_area.rpt
-report_gates  > genus_output/synth_gates.rpt	
-report_power  > genus_output/synth_power.rpt
+report_timing > genus_output/$DESIGN_synth_timing.rpt	
+report_area   > genus_output/$DESIGN_synth_area.rpt
+report_gates  > genus_output/$DESIGN_synth_gates.rpt	
+report_power  > genus_output/$DESIGN_synth_power.rpt
 
 puts "Final Runtime & Memory."
 timestat FINAL
-puts "============================"
-puts "Synthesis Finished ........."
-puts "============================"
+puts "=========================================="
+puts "$DESIGN Synthesis Finished ........."
+puts "=========================================="
