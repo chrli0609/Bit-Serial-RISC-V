@@ -7,30 +7,34 @@
 #-------------------------------------
 #  Load libraries and design, Lab 1.1
 #-------------------------------------
+
 set_db information_level 9
-
-set_db lib_search_path "models/liberty"
-#set_db library KISTA_SOI_STDLIB_ECSM_TT.lib
-
-set_db library KISTA_SOI_STDLIB2_CCS_TT.lib
-
-#Change to /home/christopher/proj/models/liberty/KISTA_SOI_STDLIB2_CCS_TT.lib
+set_db hdl_search_path ${RTL_PATH}
+set_db lib_search_path ${LIB_PATH}
 
 
-#set_db operating_conditions PVT_1P08V_125C
-set_db operating_conditions PVT_1P8V_25C
+
+
+set_db library $LIBRARY
+set_db operating_condition $OPERATING_CONDITION
+
 
 #--------------------------
 # Read Design
 #--------------------------
-#read_hdl ../verilog/SPI_Slave.v 
-read_hdl -vhdl verilog/program_package.vhdl
-read_hdl -vhdl verilog/CiscV.vhdl
+#read_hdl -vhdl ../../source/brisc/program_package.vhdl
+#read_hdl -vhdl ../../source/brisc/CiscV.vhdl
+
+read_hdl -vhdl $FILE_LIST
+
+#read_hdl -vhdl ../../source/
+
+
 
 set_db hdl_error_on_blackbox 1
-#set_db hdl_error_on_latch 1
+set_db hdl_error_on_latch 1
 
-elaborate CiscV
+elaborate $DESIGN
 
 check_design -unresolved 
 check_design -all
@@ -103,3 +107,8 @@ report_area   > genus_output/synth_area.rpt
 report_gates  > genus_output/synth_gates.rpt	
 report_power  > genus_output/synth_power.rpt
 
+puts "Final Runtime & Memory."
+timestat FINAL
+puts "============================"
+puts "Synthesis Finished ........."
+puts "============================"
