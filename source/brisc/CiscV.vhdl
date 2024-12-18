@@ -25,13 +25,10 @@ ENTITY CiscV_0 IS
         imm12_data:OUT std_logic_vector(11 downto 0);
         imm20_data:OUT std_logic_vector(19 downto 0);
         shift_imm:OUT std_logic_vector(4 downto 0);
-        succ_data:OUT std_logic_vector(3 downto 0);
-        pred_data:OUT std_logic_vector(3 downto 0);
         result_select:OUT std_logic_vector(2 downto 0);
         lui_result:OUT std_logic_vector(31 downto 0);
         alu_funct:OUT std_logic_vector(0 downto 0);
         pc_sel:OUT std_logic_vector(2 downto 0);
-        branch_immediate:IN std_logic_vector(31 downto 0);
         branch_funct:OUT std_logic_vector(2 downto 0);
         branch_bus:OUT std_logic_vector(31 downto 0);
         J_immediate:IN std_logic_vector(31 downto 0);
@@ -39,12 +36,11 @@ ENTITY CiscV_0 IS
         L_immediate:IN std_logic_vector(31 downto 0);
         load_result:OUT std_logic_vector(31 downto 0);
         store_data:IN std_logic_vector(31 downto 0);
+        store_enable:OUT std_logic_vector(0 downto 0);
         execution_enable:OUT std_logic_vector(0 downto 0);
         result_ready_decode:OUT std_logic_vector(0 downto 0);
         need_writeback:OUT std_logic_vector(0 downto 0);
         load_writeback_enable:OUT std_logic_vector(0 downto 0);
-        wr_reg:OUT std_logic_vector(0 downto 0);
-        go:OUT std_logic_vector(1 downto 0);
         alu_ctrl:OUT std_logic_vector(2 downto 0);
         pc:IN std_logic_vector(31 downto 0);
         reversed_pc:IN std_logic_vector(31 downto 0);
@@ -61,8 +57,8 @@ END CiscV_0;
 
 ARCHITECTURE program OF CiscV_0 IS
 
-   SUBTYPE state_type IS INTEGER RANGE 0 TO 737;
-   -- Reduced to a total of 738 states
+   SUBTYPE state_type IS INTEGER RANGE 0 TO 664;
+   -- Reduced to a total of 665 states
    SIGNAL pres_state,pres_state_plus_1,next_state:state_type;
    ATTRIBUTE state_vector:string;
    ATTRIBUTE state_vector OF program:ARCHITECTURE IS "pres_state";
@@ -105,10 +101,6 @@ ARCHITECTURE program OF CiscV_0 IS
    SIGNAL imm20_data_internal: std_logic_vector(19 downto 0);
    SIGNAL shift_imm_register: std_logic_vector(4 downto 0);
    SIGNAL shift_imm_internal: std_logic_vector(4 downto 0);
-   SIGNAL succ_data_register: std_logic_vector(3 downto 0);
-   SIGNAL succ_data_internal: std_logic_vector(3 downto 0);
-   SIGNAL pred_data_register: std_logic_vector(3 downto 0);
-   SIGNAL pred_data_internal: std_logic_vector(3 downto 0);
    SIGNAL result_select_register: std_logic_vector(2 downto 0);
    SIGNAL result_select_internal: std_logic_vector(2 downto 0);
    SIGNAL lui_result_register: std_logic_vector(31 downto 0);
@@ -123,6 +115,8 @@ ARCHITECTURE program OF CiscV_0 IS
    SIGNAL branch_bus_internal: std_logic_vector(31 downto 0);
    SIGNAL load_result_register: std_logic_vector(31 downto 0);
    SIGNAL load_result_internal: std_logic_vector(31 downto 0);
+   SIGNAL store_enable_register: std_logic_vector(0 downto 0);
+   SIGNAL store_enable_internal: std_logic_vector(0 downto 0);
    SIGNAL execution_enable_register: std_logic_vector(0 downto 0);
    SIGNAL execution_enable_internal: std_logic_vector(0 downto 0);
    SIGNAL result_ready_decode_register: std_logic_vector(0 downto 0);
@@ -131,10 +125,6 @@ ARCHITECTURE program OF CiscV_0 IS
    SIGNAL need_writeback_internal: std_logic_vector(0 downto 0);
    SIGNAL load_writeback_enable_register: std_logic_vector(0 downto 0);
    SIGNAL load_writeback_enable_internal: std_logic_vector(0 downto 0);
-   SIGNAL wr_reg_register: std_logic_vector(0 downto 0);
-   SIGNAL wr_reg_internal: std_logic_vector(0 downto 0);
-   SIGNAL go_register: std_logic_vector(1 downto 0);
-   SIGNAL go_internal: std_logic_vector(1 downto 0);
    SIGNAL alu_ctrl_register: std_logic_vector(2 downto 0);
    SIGNAL alu_ctrl_internal: std_logic_vector(2 downto 0);
    SIGNAL send_clk_register: std_logic_vector(0 downto 0);
@@ -168,13 +158,10 @@ BEGIN
                imm12_data_internal,
                imm20_data_internal,
                shift_imm_internal,
-               succ_data_internal,
-               pred_data_internal,
                result_select_internal,
                lui_result_internal,
                alu_funct_internal,
                pc_sel_internal,
-               branch_immediate,
                branch_funct_internal,
                branch_bus_internal,
                J_immediate,
@@ -182,12 +169,11 @@ BEGIN
                L_immediate,
                load_result_internal,
                store_data,
+               store_enable_internal,
                execution_enable_internal,
                result_ready_decode_internal,
                need_writeback_internal,
                load_writeback_enable_internal,
-               wr_reg_internal,
-               go_internal,
                alu_ctrl_internal,
                pc,
                reversed_pc,
@@ -215,8 +201,6 @@ BEGIN
          imm12_data_register<=imm12_data_internal;
          imm20_data_register<=imm20_data_internal;
          shift_imm_register<=shift_imm_internal;
-         succ_data_register<=succ_data_internal;
-         pred_data_register<=pred_data_internal;
          result_select_register<=result_select_internal;
          lui_result_register<=lui_result_internal;
          alu_funct_register<=alu_funct_internal;
@@ -224,12 +208,11 @@ BEGIN
          branch_funct_register<=branch_funct_internal;
          branch_bus_register<=branch_bus_internal;
          load_result_register<=load_result_internal;
+         store_enable_register<=store_enable_internal;
          execution_enable_register<=execution_enable_internal;
          result_ready_decode_register<=result_ready_decode_internal;
          need_writeback_register<=need_writeback_internal;
          load_writeback_enable_register<=load_writeback_enable_internal;
-         wr_reg_register<=wr_reg_internal;
-         go_register<=go_internal;
          alu_ctrl_register<=alu_ctrl_internal;
          send_clk_register<=send_clk_internal;
          execution_type_register<=execution_type_internal;
@@ -244,11 +227,9 @@ BEGIN
          ELSIF ((pres_state=1) AND
                 (sreset(0 DOWNTO 0)=std_logic_vector'("1"))) THEN 
             next_state<=1;
-            go_register(1 downto 0) <= std_logic_vector'("00");
          ELSIF ((pres_state=1) AND
                 (sreset(0 DOWNTO 0)=std_logic_vector'("0"))) THEN 
             next_state<=pres_state_plus_1;
-            go_register(1 downto 0) <= std_logic_vector'("10");
          ELSIF ((pres_state=2) AND
                 (sreset(0 DOWNTO 0)=std_logic_vector'("0"))) THEN 
             next_state<=0;
@@ -256,8 +237,6 @@ BEGIN
             m_active_register(0 downto 0) <= std_logic_vector'("0");
             internal_addr_register(1 downto 0) <= std_logic_vector'("00");
             internal_m_data_register(1 downto 0) <= std_logic_vector'("00");
-            go_register(1 downto 0) <= std_logic_vector'("00");
-            wr_reg_register(0 downto 0) <= std_logic_vector'("0");
          ELSIF ((pres_state=0)) THEN 
             next_state<=3;
             reset_parity_register(0 downto 0) <= std_logic_vector'("0");
@@ -325,29 +304,29 @@ BEGIN
             next_state<=pres_state_plus_1;
             m_active_register(0 downto 0) <= std_logic_vector'("0");
             reset_parity_register(0 downto 0) <= std_logic_vector'("1");
-         ELSIF ((pres_state=22) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("11"))) THEN 
+         ELSIF ((pres_state=22)) THEN 
             next_state<=pres_state_plus_1;
          ELSIF ((pres_state=23) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("10"))) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=24) AND
                 (s_data(1 DOWNTO 0)=std_logic_vector'("11"))) THEN 
             next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=24) AND
+                (s_data(1 DOWNTO 0)=std_logic_vector'("10"))) THEN 
+            next_state<=pres_state_plus_1;
          ELSIF ((pres_state=25) AND
+                (s_data(1 DOWNTO 0)=std_logic_vector'("11"))) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=26) AND
                 (s_data(1 DOWNTO 1)=std_logic_vector'("0"))) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=26)) THEN 
-            next_state<=pres_state_plus_1;
          ELSIF ((pres_state=27)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=28)) THEN 
             next_state<=pres_state_plus_1;
             rd_data_register(4 downto 0) <= s_data(0) & s_data(1) &
                   FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
                   FIFO_s_data(2)(0);
             result_select_register(2 downto 0) <= std_logic_vector'("000");
             rs_sel_register(1 downto 0) <= std_logic_vector'("00");
-         ELSIF ((pres_state=28)) THEN 
-            next_state<=pres_state_plus_1;
          ELSIF ((pres_state=29)) THEN 
             next_state<=pres_state_plus_1;
          ELSIF ((pres_state=30)) THEN 
@@ -366,6 +345,8 @@ BEGIN
             next_state<=pres_state_plus_1;
          ELSIF ((pres_state=37)) THEN 
             next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=38)) THEN 
+            next_state<=pres_state_plus_1;
             lui_result_register(31 downto 0) <= s_data(0) & s_data(1) &
                   FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
                   FIFO_s_data(2)(0) & FIFO_s_data(2)(1) &
@@ -380,34 +361,28 @@ BEGIN
             result_ready_decode_register(0 downto 0) <= std_logic_vector'("1");
             need_writeback_register(0 downto 0) <= std_logic_vector'("1");
             pc_sel_register(2 downto 0) <= std_logic_vector'("000");
-         ELSIF ((pres_state=38)) THEN 
+         ELSIF ((pres_state=39)) THEN 
             next_state<=0;
             com_enable_register(0 downto 0) <= std_logic_vector'("0");
             result_ready_decode_register(0 downto 0) <= std_logic_vector'("0");
             need_writeback_register(0 downto 0) <= std_logic_vector'("0");
-            go_register(1 downto 0) <= std_logic_vector'("00");
             pc_sel_register(2 downto 0) <= std_logic_vector'("001");
             com_enable_register(0 downto 0) <= std_logic_vector'("0");
-         ELSIF ((pres_state=24) AND
+         ELSIF ((pres_state=25) AND
                 (s_data(1 DOWNTO 0)=std_logic_vector'("10"))) THEN 
-            next_state<=39;
-         ELSIF ((pres_state=39) AND
+            next_state<=40;
+         ELSIF ((pres_state=40) AND
                 (s_data(1 DOWNTO 1)=std_logic_vector'("0"))) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=40)) THEN 
             next_state<=pres_state_plus_1;
          ELSIF ((pres_state=41)) THEN 
             next_state<=pres_state_plus_1;
-            rd_data_register(4 downto 0) <= s_data(0) & s_data(1) &
-                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
-                  FIFO_s_data(2)(0);
+         ELSIF ((pres_state=42)) THEN 
+            next_state<=pres_state_plus_1;
             rd_data_register(4 downto 0) <= s_data(0) & s_data(1) &
                   FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
                   FIFO_s_data(2)(0);
             rs_sel_register(1 downto 0) <= std_logic_vector'("11");
             result_select_register(2 downto 0) <= std_logic_vector'("010");
-         ELSIF ((pres_state=42)) THEN 
-            next_state<=pres_state_plus_1;
          ELSIF ((pres_state=43)) THEN 
             next_state<=pres_state_plus_1;
          ELSIF ((pres_state=44)) THEN 
@@ -426,59 +401,57 @@ BEGIN
             next_state<=pres_state_plus_1;
          ELSIF ((pres_state=51)) THEN 
             next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=52)) THEN 
+            next_state<=pres_state_plus_1;
             op1_alt_register(31 downto 0) <= pc(31 downto 0);
-            imm20_data_register(19 downto 0) <= s_data(0) & s_data(1) &
-                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
-                  FIFO_s_data(2)(0) & FIFO_s_data(2)(1) &
-                  FIFO_s_data(3)(0) & FIFO_s_data(3)(1) &
-                  FIFO_s_data(4)(0) & FIFO_s_data(4)(1) &
-                  FIFO_s_data(5)(0) & FIFO_s_data(5)(1) &
-                  FIFO_s_data(6)(0) & FIFO_s_data(6)(1) &
-                  FIFO_s_data(7)(0) & FIFO_s_data(7)(1) &
-                  FIFO_s_data(8)(0) & FIFO_s_data(8)(1) &
-                  FIFO_s_data(9)(0) & FIFO_s_data(9)(1);
+            imm20_data_register(19 downto 0) <= s_data(1 downto 0) &
+                  FIFO_s_data(1)(1 downto 0) &
+                  FIFO_s_data(2)(1 downto 0) &
+                  FIFO_s_data(3)(1 downto 0) &
+                  FIFO_s_data(4)(1 downto 0) &
+                  FIFO_s_data(5)(1 downto 0) &
+                  FIFO_s_data(6)(1 downto 0) &
+                  FIFO_s_data(7)(1 downto 0) &
+                  FIFO_s_data(8)(1 downto 0) &
+                  FIFO_s_data(9)(1 downto 0);
             op2_alt_register(31 downto 0) <= J_immediate(31 downto 0);
-            go_register(1 downto 0) <= std_logic_vector'("10");
             pc_sel_register(2 downto 0) <= std_logic_vector'("000");
             result_ready_decode_register(0 downto 0) <= std_logic_vector'("1");
             need_writeback_register(0 downto 0) <= std_logic_vector'("1");
-         ELSIF ((pres_state=52)) THEN 
+         ELSIF ((pres_state=53)) THEN 
             next_state<=0;
-            go_register(1 downto 0) <= std_logic_vector'("00");
             pc_sel_register(2 downto 0) <= std_logic_vector'("001");
             result_ready_decode_register(0 downto 0) <= std_logic_vector'("0");
             need_writeback_register(0 downto 0) <= std_logic_vector'("0");
             com_enable_register(0 downto 0) <= std_logic_vector'("0");
-         ELSIF ((pres_state=24) AND
+         ELSIF ((pres_state=25) AND
                 (s_data(1 DOWNTO 0)=std_logic_vector'("01"))) THEN 
-            next_state<=53;
-         ELSIF ((pres_state=53) AND
+            next_state<=54;
+         ELSIF ((pres_state=54) AND
                 (s_data(1 DOWNTO 1)=std_logic_vector'("1"))) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=54)) THEN 
-            next_state<=pres_state_plus_1;
          ELSIF ((pres_state=55)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=56)) THEN 
             next_state<=pres_state_plus_1;
             rd_data_register(4 downto 0) <= s_data(0) & s_data(1) &
                   FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
                   FIFO_s_data(2)(0);
             rs_sel_register(1 downto 0) <= std_logic_vector'("10");
             result_select_register(2 downto 0) <= std_logic_vector'("011");
-         ELSIF ((pres_state=56) AND
+         ELSIF ((pres_state=57) AND
                 (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=57) AND
+         ELSIF ((pres_state=58) AND
                 (s_data(1 DOWNTO 1)=std_logic_vector'("0"))) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=58)) THEN 
-            next_state<=pres_state_plus_1;
          ELSIF ((pres_state=59)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=60)) THEN 
             next_state<=pres_state_plus_1;
             rs1_data_register(4 downto 0) <= s_data(0) & s_data(1) &
                   FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
                   FIFO_s_data(2)(0);
-         ELSIF ((pres_state=60)) THEN 
-            next_state<=pres_state_plus_1;
          ELSIF ((pres_state=61)) THEN 
             next_state<=pres_state_plus_1;
          ELSIF ((pres_state=62)) THEN 
@@ -489,6 +462,8 @@ BEGIN
             next_state<=pres_state_plus_1;
          ELSIF ((pres_state=65)) THEN 
             next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=66)) THEN 
+            next_state<=pres_state_plus_1;
             op2_alt_register(31 downto 0) <= std_logic_vector'("00000000000000000000") &
                   s_data(0) & s_data(1) &
                   FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
@@ -497,36 +472,32 @@ BEGIN
                   FIFO_s_data(4)(0) & FIFO_s_data(4)(1) &
                   FIFO_s_data(5)(0) & FIFO_s_data(5)(1);
             pc_sel_register(2 downto 0) <= std_logic_vector'("000");
-            go_register(1 downto 0) <= std_logic_vector'("10");
             execution_enable_register(0 downto 0) <= std_logic_vector'("1");
             need_writeback_register(0 downto 0) <= std_logic_vector'("1");
-         ELSIF ((pres_state=66)) THEN 
+         ELSIF ((pres_state=67)) THEN 
             next_state<=0;
             pc_sel_register(2 downto 0) <= std_logic_vector'("011");
-            go_register(1 downto 0) <= std_logic_vector'("00");
             execution_enable_register(0 downto 0) <= std_logic_vector'("0");
             need_writeback_register(0 downto 0) <= std_logic_vector'("0");
             com_enable_register(0 downto 0) <= std_logic_vector'("0");
-         ELSIF ((pres_state=23) AND
+         ELSIF ((pres_state=24) AND
                 (s_data(1 DOWNTO 0)=std_logic_vector'("11"))) THEN 
-            next_state<=67;
-         ELSIF ((pres_state=67) AND
+            next_state<=68;
+         ELSIF ((pres_state=68) AND
                 (s_data(1 DOWNTO 0)=std_logic_vector'("01"))) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=68) AND
+         ELSIF ((pres_state=69) AND
                 (s_data(1 DOWNTO 1)=std_logic_vector'("1"))) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=69)) THEN 
-            next_state<=pres_state_plus_1;
          ELSIF ((pres_state=70)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=71)) THEN 
             next_state<=pres_state_plus_1;
             rd_data_register(4 downto 0) <= s_data(0) & s_data(1) &
                   FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
                   FIFO_s_data(2)(0);
             result_select_register(2 downto 0) <= std_logic_vector'("011");
             rs_sel_register(1 downto 0) <= std_logic_vector'("11");
-         ELSIF ((pres_state=71)) THEN 
-            next_state<=pres_state_plus_1;
          ELSIF ((pres_state=72)) THEN 
             next_state<=pres_state_plus_1;
          ELSIF ((pres_state=73)) THEN 
@@ -545,6 +516,8 @@ BEGIN
             next_state<=pres_state_plus_1;
          ELSIF ((pres_state=80)) THEN 
             next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=81)) THEN 
+            next_state<=pres_state_plus_1;
             op2_alt_register(31 downto 0) <= std_logic_vector'("000000000000") &
                   s_data(0) & s_data(1) &
                   FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
@@ -556,255 +529,389 @@ BEGIN
                   FIFO_s_data(7)(0) & FIFO_s_data(7)(1) &
                   FIFO_s_data(8)(0) & FIFO_s_data(8)(1) &
                   FIFO_s_data(9)(0) & FIFO_s_data(9)(1);
-            go_register(1 downto 0) <= std_logic_vector'("10");
             pc_sel_register(2 downto 0) <= std_logic_vector'("000");
             execution_enable_register(0 downto 0) <= std_logic_vector'("1");
             need_writeback_register(0 downto 0) <= std_logic_vector'("1");
-         ELSIF ((pres_state=81)) THEN 
+         ELSIF ((pres_state=82)) THEN 
             next_state<=0;
-            go_register(1 downto 0) <= std_logic_vector'("00");
             result_select_register(2 downto 0) <= std_logic_vector'("111");
             pc_sel_register(2 downto 0) <= std_logic_vector'("010");
             execution_enable_register(0 downto 0) <= std_logic_vector'("0");
             need_writeback_register(0 downto 0) <= std_logic_vector'("0");
             com_enable_register(0 downto 0) <= std_logic_vector'("0");
-         ELSIF ((pres_state=67) AND
+         ELSIF ((pres_state=24) AND
                 (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
-            next_state<=82;
-         ELSIF ((pres_state=82) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
-            next_state<=pres_state_plus_1;
+            next_state<=83;
          ELSIF ((pres_state=83) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
+                (s_data(1 DOWNTO 0)=std_logic_vector'("11"))) THEN 
             next_state<=pres_state_plus_1;
          ELSIF ((pres_state=84) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
+                (s_data(1 DOWNTO 1)=std_logic_vector'("0"))) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=85) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
+         ELSIF ((pres_state=85)) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=86) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
+         ELSIF ((pres_state=86)) THEN 
             next_state<=pres_state_plus_1;
+            rd_data_register(4 downto 0) <= s_data(0) & s_data(1) &
+                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
+                  FIFO_s_data(2)(0);
+            rs_sel_register(1 downto 0) <= std_logic_vector'("00");
          ELSIF ((pres_state=87) AND
                 (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
             next_state<=pres_state_plus_1;
          ELSIF ((pres_state=88) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
+                (s_data(1 DOWNTO 1)=std_logic_vector'("0"))) THEN 
             next_state<=pres_state_plus_1;
          ELSIF ((pres_state=89)) THEN 
             next_state<=pres_state_plus_1;
          ELSIF ((pres_state=90)) THEN 
             next_state<=pres_state_plus_1;
-            succ_data_register(3 downto 0) <= FIFO_s_data(1)(0 downto 0) & 
-                  s_data(1 downto 0) & 
-                  s_data(1 downto 1);
+            rs1_data_register(4 downto 0) <= s_data(0) & s_data(1) &
+                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
+                  FIFO_s_data(2)(0);
+            result_select_register(2 downto 0) <= std_logic_vector'("001");
+            alu_ctrl_register(2 downto 0) <= std_logic_vector'("000");
          ELSIF ((pres_state=91)) THEN 
             next_state<=pres_state_plus_1;
          ELSIF ((pres_state=92)) THEN 
             next_state<=pres_state_plus_1;
-            pred_data_register(3 downto 0) <= FIFO_s_data(1)(0 downto 0) & 
-                  s_data(1 downto 0) & 
-                  s_data(1 downto 1);
          ELSIF ((pres_state=93) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
+                (s_data(0 DOWNTO 0)=std_logic_vector'("0"))) THEN 
             next_state<=pres_state_plus_1;
-            go_register(1 downto 0) <= std_logic_vector'("10");
+            rs2_data_register(4 downto 0) <= s_data(1 downto 1) &
+                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
+                  FIFO_s_data(2)(0) & FIFO_s_data(2)(1);
          ELSIF ((pres_state=94) AND
                 (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
-            next_state<=0;
-            rs_sel_register(1 downto 0) <= std_logic_vector'("11");
-            go_register(1 downto 0) <= std_logic_vector'("00");
-         ELSIF ((pres_state=85) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("10"))) THEN 
-            next_state<=95;
+            next_state<=pres_state_plus_1;
          ELSIF ((pres_state=95) AND
                 (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
             next_state<=pres_state_plus_1;
          ELSIF ((pres_state=96) AND
                 (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=97) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=98) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=99) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=100) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=101) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=102) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
-            next_state<=pres_state_plus_1;
-            go_register(1 downto 0) <= std_logic_vector'("10");
-         ELSIF ((pres_state=103) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
+            alu_funct_register(0 downto 0) <= std_logic_vector'("0");
+            execution_type_register(0 downto 0) <= std_logic_vector'("1");
+            execution_enable_register(0 downto 0) <= std_logic_vector'("1");
+            need_writeback_register(0 downto 0) <= std_logic_vector'("1");
+            pc_sel_register(2 downto 0) <= std_logic_vector'("000");
+         ELSIF ((pres_state=97)) THEN 
             next_state<=0;
-            rs_sel_register(1 downto 0) <= std_logic_vector'("11");
-            go_register(1 downto 0) <= std_logic_vector'("00");
-         ELSIF ((pres_state=23) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
-            next_state<=104;
-         ELSIF ((pres_state=104) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("11"))) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=105) AND
-                (s_data(1 DOWNTO 1)=std_logic_vector'("1"))) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=106)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=107)) THEN 
-            next_state<=pres_state_plus_1;
-            rd_data_register(4 downto 0) <= s_data(0) & s_data(1) &
-                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
-                  FIFO_s_data(2)(0);
-         ELSIF ((pres_state=108) AND
+            execution_enable_register(0 downto 0) <= std_logic_vector'("0");
+            need_writeback_register(0 downto 0) <= std_logic_vector'("0");
+            com_enable_register(0 downto 0) <= std_logic_vector'("0");
+            pc_sel_register(2 downto 0) <= std_logic_vector'("001");
+         ELSIF ((pres_state=96) AND
                 (s_data(1 DOWNTO 0)=std_logic_vector'("10"))) THEN 
+            next_state<=98;
+            alu_funct_register(0 downto 0) <= std_logic_vector'("1");
+            execution_type_register(0 downto 0) <= std_logic_vector'("1");
+            execution_enable_register(0 downto 0) <= std_logic_vector'("1");
+            need_writeback_register(0 downto 0) <= std_logic_vector'("1");
+            pc_sel_register(2 downto 0) <= std_logic_vector'("000");
+         ELSIF ((pres_state=98)) THEN 
+            next_state<=0;
+            execution_enable_register(0 downto 0) <= std_logic_vector'("0");
+            need_writeback_register(0 downto 0) <= std_logic_vector'("0");
+            com_enable_register(0 downto 0) <= std_logic_vector'("0");
+            pc_sel_register(2 downto 0) <= std_logic_vector'("001");
+         ELSIF ((pres_state=88) AND
+                (s_data(1 DOWNTO 1)=std_logic_vector'("1"))) THEN 
+            next_state<=99;
+         ELSIF ((pres_state=99)) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=109) AND
-                (s_data(1 DOWNTO 1)=std_logic_vector'("0"))) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=110)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=111)) THEN 
+         ELSIF ((pres_state=100)) THEN 
             next_state<=pres_state_plus_1;
             rs1_data_register(4 downto 0) <= s_data(0) & s_data(1) &
                   FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
                   FIFO_s_data(2)(0);
+            result_select_register(2 downto 0) <= std_logic_vector'("001");
+            alu_ctrl_register(2 downto 0) <= std_logic_vector'("100");
+         ELSIF ((pres_state=101)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=102)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=103) AND
+                (s_data(0 DOWNTO 0)=std_logic_vector'("0"))) THEN 
+            next_state<=pres_state_plus_1;
+            rs2_data_register(4 downto 0) <= s_data(1 downto 1) &
+                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
+                  FIFO_s_data(2)(0) & FIFO_s_data(2)(1);
+         ELSIF ((pres_state=104) AND
+                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=105) AND
+                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=106) AND
+                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
+            next_state<=pres_state_plus_1;
+            alu_funct_register(0 downto 0) <= std_logic_vector'("0");
+            execution_type_register(0 downto 0) <= std_logic_vector'("1");
+            execution_enable_register(0 downto 0) <= std_logic_vector'("1");
+            need_writeback_register(0 downto 0) <= std_logic_vector'("1");
+            pc_sel_register(2 downto 0) <= std_logic_vector'("000");
+         ELSIF ((pres_state=107)) THEN 
+            next_state<=0;
+            execution_enable_register(0 downto 0) <= std_logic_vector'("0");
+            need_writeback_register(0 downto 0) <= std_logic_vector'("0");
+            com_enable_register(0 downto 0) <= std_logic_vector'("0");
+            pc_sel_register(2 downto 0) <= std_logic_vector'("001");
+         ELSIF ((pres_state=87) AND
+                (s_data(1 DOWNTO 0)=std_logic_vector'("10"))) THEN 
+            next_state<=108;
+         ELSIF ((pres_state=108) AND
+                (s_data(1 DOWNTO 1)=std_logic_vector'("0"))) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=109)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=110)) THEN 
+            next_state<=pres_state_plus_1;
+            rs1_data_register(4 downto 0) <= s_data(0) & s_data(1) &
+                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
+                  FIFO_s_data(2)(0);
+            result_select_register(2 downto 0) <= std_logic_vector'("001");
+            alu_ctrl_register(2 downto 0) <= std_logic_vector'("001");
+         ELSIF ((pres_state=111)) THEN 
+            next_state<=pres_state_plus_1;
          ELSIF ((pres_state=112)) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=113)) THEN 
+         ELSIF ((pres_state=113) AND
+                (s_data(0 DOWNTO 0)=std_logic_vector'("0"))) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=114)) THEN 
+            rs2_data_register(4 downto 0) <= s_data(1 downto 1) &
+                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
+                  FIFO_s_data(2)(0) & FIFO_s_data(2)(1);
+         ELSIF ((pres_state=114) AND
+                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=115)) THEN 
+         ELSIF ((pres_state=115) AND
+                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=116)) THEN 
+         ELSIF ((pres_state=116) AND
+                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
             next_state<=pres_state_plus_1;
+            alu_funct_register(0 downto 0) <= std_logic_vector'("0");
+            execution_type_register(0 downto 0) <= std_logic_vector'("1");
+            execution_enable_register(0 downto 0) <= std_logic_vector'("1");
+            need_writeback_register(0 downto 0) <= std_logic_vector'("1");
+            pc_sel_register(2 downto 0) <= std_logic_vector'("000");
          ELSIF ((pres_state=117)) THEN 
             next_state<=0;
-         ELSIF ((pres_state=109) AND
+            execution_enable_register(0 downto 0) <= std_logic_vector'("0");
+            need_writeback_register(0 downto 0) <= std_logic_vector'("0");
+            com_enable_register(0 downto 0) <= std_logic_vector'("0");
+            pc_sel_register(2 downto 0) <= std_logic_vector'("001");
+         ELSIF ((pres_state=108) AND
                 (s_data(1 DOWNTO 1)=std_logic_vector'("1"))) THEN 
             next_state<=118;
          ELSIF ((pres_state=118)) THEN 
             next_state<=pres_state_plus_1;
          ELSIF ((pres_state=119)) THEN 
             next_state<=pres_state_plus_1;
+            rs1_data_register(4 downto 0) <= s_data(0) & s_data(1) &
+                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
+                  FIFO_s_data(2)(0);
+            result_select_register(2 downto 0) <= std_logic_vector'("001");
+            alu_ctrl_register(2 downto 0) <= std_logic_vector'("101");
          ELSIF ((pres_state=120)) THEN 
             next_state<=pres_state_plus_1;
          ELSIF ((pres_state=121)) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=122)) THEN 
+         ELSIF ((pres_state=122) AND
+                (s_data(0 DOWNTO 0)=std_logic_vector'("0"))) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=123)) THEN 
+            rs2_data_register(4 downto 0) <= s_data(1 downto 1) &
+                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
+                  FIFO_s_data(2)(0) & FIFO_s_data(2)(1);
+         ELSIF ((pres_state=123) AND
+                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=124)) THEN 
+         ELSIF ((pres_state=124) AND
+                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=125)) THEN 
+         ELSIF ((pres_state=125) AND
+                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
+            next_state<=pres_state_plus_1;
+            alu_funct_register(0 downto 0) <= std_logic_vector'("0");
+            execution_type_register(0 downto 0) <= std_logic_vector'("1");
+            execution_enable_register(0 downto 0) <= std_logic_vector'("1");
+            need_writeback_register(0 downto 0) <= std_logic_vector'("1");
+            pc_sel_register(2 downto 0) <= std_logic_vector'("000");
+         ELSIF ((pres_state=126)) THEN 
             next_state<=0;
-         ELSIF ((pres_state=108) AND
+            execution_enable_register(0 downto 0) <= std_logic_vector'("0");
+            need_writeback_register(0 downto 0) <= std_logic_vector'("0");
+            com_enable_register(0 downto 0) <= std_logic_vector'("0");
+            pc_sel_register(2 downto 0) <= std_logic_vector'("001");
+         ELSIF ((pres_state=125) AND
+                (s_data(1 DOWNTO 0)=std_logic_vector'("10"))) THEN 
+            next_state<=127;
+            alu_funct_register(0 downto 0) <= std_logic_vector'("1");
+            execution_type_register(0 downto 0) <= std_logic_vector'("1");
+            execution_enable_register(0 downto 0) <= std_logic_vector'("1");
+            need_writeback_register(0 downto 0) <= std_logic_vector'("1");
+            pc_sel_register(2 downto 0) <= std_logic_vector'("000");
+         ELSIF ((pres_state=127)) THEN 
+            next_state<=0;
+            execution_enable_register(0 downto 0) <= std_logic_vector'("0");
+            need_writeback_register(0 downto 0) <= std_logic_vector'("0");
+            com_enable_register(0 downto 0) <= std_logic_vector'("0");
+            pc_sel_register(2 downto 0) <= std_logic_vector'("001");
+         ELSIF ((pres_state=87) AND
                 (s_data(1 DOWNTO 0)=std_logic_vector'("01"))) THEN 
-            next_state<=126;
-         ELSIF ((pres_state=126) AND
+            next_state<=128;
+         ELSIF ((pres_state=128) AND
                 (s_data(1 DOWNTO 1)=std_logic_vector'("0"))) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=127)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=128)) THEN 
-            next_state<=pres_state_plus_1;
-            rs1_data_register(4 downto 0) <= s_data(0) & s_data(1) &
-                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
-                  FIFO_s_data(2)(0);
          ELSIF ((pres_state=129)) THEN 
             next_state<=pres_state_plus_1;
          ELSIF ((pres_state=130)) THEN 
             next_state<=pres_state_plus_1;
+            rs1_data_register(4 downto 0) <= s_data(0) & s_data(1) &
+                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
+                  FIFO_s_data(2)(0);
+            result_select_register(2 downto 0) <= std_logic_vector'("001");
+            alu_ctrl_register(2 downto 0) <= std_logic_vector'("010");
          ELSIF ((pres_state=131)) THEN 
             next_state<=pres_state_plus_1;
          ELSIF ((pres_state=132)) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=133)) THEN 
+         ELSIF ((pres_state=133) AND
+                (s_data(0 DOWNTO 0)=std_logic_vector'("0"))) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=134)) THEN 
-            next_state<=0;
-         ELSIF ((pres_state=126) AND
-                (s_data(1 DOWNTO 1)=std_logic_vector'("1"))) THEN 
-            next_state<=135;
-         ELSIF ((pres_state=135)) THEN 
+            rs2_data_register(4 downto 0) <= s_data(1 downto 1) &
+                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
+                  FIFO_s_data(2)(0) & FIFO_s_data(2)(1);
+         ELSIF ((pres_state=134) AND
+                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=136)) THEN 
+         ELSIF ((pres_state=135) AND
+                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
             next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=136) AND
+                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
+            next_state<=pres_state_plus_1;
+            alu_funct_register(0 downto 0) <= std_logic_vector'("0");
+            execution_type_register(0 downto 0) <= std_logic_vector'("1");
+            execution_enable_register(0 downto 0) <= std_logic_vector'("1");
+            need_writeback_register(0 downto 0) <= std_logic_vector'("1");
+            pc_sel_register(2 downto 0) <= std_logic_vector'("000");
          ELSIF ((pres_state=137)) THEN 
-            next_state<=pres_state_plus_1;
+            next_state<=0;
+            execution_enable_register(0 downto 0) <= std_logic_vector'("0");
+            need_writeback_register(0 downto 0) <= std_logic_vector'("0");
+            com_enable_register(0 downto 0) <= std_logic_vector'("0");
+            pc_sel_register(2 downto 0) <= std_logic_vector'("001");
+         ELSIF ((pres_state=128) AND
+                (s_data(1 DOWNTO 1)=std_logic_vector'("1"))) THEN 
+            next_state<=138;
          ELSIF ((pres_state=138)) THEN 
             next_state<=pres_state_plus_1;
          ELSIF ((pres_state=139)) THEN 
             next_state<=pres_state_plus_1;
+            rs1_data_register(4 downto 0) <= s_data(0) & s_data(1) &
+                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
+                  FIFO_s_data(2)(0);
+            result_select_register(2 downto 0) <= std_logic_vector'("001");
+            alu_ctrl_register(2 downto 0) <= std_logic_vector'("110");
          ELSIF ((pres_state=140)) THEN 
             next_state<=pres_state_plus_1;
          ELSIF ((pres_state=141)) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=142)) THEN 
-            next_state<=0;
-         ELSIF ((pres_state=108) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("11"))) THEN 
-            next_state<=143;
-         ELSIF ((pres_state=143) AND
-                (s_data(1 DOWNTO 1)=std_logic_vector'("0"))) THEN 
+         ELSIF ((pres_state=142) AND
+                (s_data(0 DOWNTO 0)=std_logic_vector'("0"))) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=144)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=145)) THEN 
-            next_state<=pres_state_plus_1;
-            rs1_data_register(4 downto 0) <= s_data(0) & s_data(1) &
+            rs2_data_register(4 downto 0) <= s_data(1 downto 1) &
                   FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
-                  FIFO_s_data(2)(0);
-         ELSIF ((pres_state=146)) THEN 
+                  FIFO_s_data(2)(0) & FIFO_s_data(2)(1);
+         ELSIF ((pres_state=143) AND
+                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=147)) THEN 
+         ELSIF ((pres_state=144) AND
+                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=145) AND
+                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
+            next_state<=pres_state_plus_1;
+            alu_funct_register(0 downto 0) <= std_logic_vector'("0");
+            execution_type_register(0 downto 0) <= std_logic_vector'("1");
+            execution_enable_register(0 downto 0) <= std_logic_vector'("1");
+            need_writeback_register(0 downto 0) <= std_logic_vector'("1");
+            pc_sel_register(2 downto 0) <= std_logic_vector'("000");
+         ELSIF ((pres_state=146)) THEN 
+            next_state<=0;
+            execution_enable_register(0 downto 0) <= std_logic_vector'("0");
+            need_writeback_register(0 downto 0) <= std_logic_vector'("0");
+            com_enable_register(0 downto 0) <= std_logic_vector'("0");
+            pc_sel_register(2 downto 0) <= std_logic_vector'("001");
+         ELSIF ((pres_state=87) AND
+                (s_data(1 DOWNTO 0)=std_logic_vector'("11"))) THEN 
+            next_state<=147;
+         ELSIF ((pres_state=147) AND
+                (s_data(1 DOWNTO 1)=std_logic_vector'("0"))) THEN 
             next_state<=pres_state_plus_1;
          ELSIF ((pres_state=148)) THEN 
             next_state<=pres_state_plus_1;
          ELSIF ((pres_state=149)) THEN 
             next_state<=pres_state_plus_1;
+            rs1_data_register(4 downto 0) <= s_data(0) & s_data(1) &
+                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
+                  FIFO_s_data(2)(0);
+            result_select_register(2 downto 0) <= std_logic_vector'("001");
+            alu_ctrl_register(2 downto 0) <= std_logic_vector'("011");
          ELSIF ((pres_state=150)) THEN 
             next_state<=pres_state_plus_1;
          ELSIF ((pres_state=151)) THEN 
-            next_state<=0;
-         ELSIF ((pres_state=143) AND
-                (s_data(1 DOWNTO 1)=std_logic_vector'("1"))) THEN 
-            next_state<=152;
-         ELSIF ((pres_state=152)) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=153)) THEN 
+         ELSIF ((pres_state=152) AND
+                (s_data(0 DOWNTO 0)=std_logic_vector'("0"))) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=154)) THEN 
+            rs2_data_register(4 downto 0) <= s_data(1 downto 1) &
+                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
+                  FIFO_s_data(2)(0) & FIFO_s_data(2)(1);
+         ELSIF ((pres_state=153) AND
+                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=155)) THEN 
+         ELSIF ((pres_state=154) AND
+                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
             next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=155) AND
+                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
+            next_state<=pres_state_plus_1;
+            alu_funct_register(0 downto 0) <= std_logic_vector'("0");
+            execution_type_register(0 downto 0) <= std_logic_vector'("1");
+            execution_enable_register(0 downto 0) <= std_logic_vector'("1");
+            need_writeback_register(0 downto 0) <= std_logic_vector'("1");
+            pc_sel_register(2 downto 0) <= std_logic_vector'("000");
          ELSIF ((pres_state=156)) THEN 
-            next_state<=pres_state_plus_1;
+            next_state<=0;
+            execution_enable_register(0 downto 0) <= std_logic_vector'("0");
+            need_writeback_register(0 downto 0) <= std_logic_vector'("0");
+            com_enable_register(0 downto 0) <= std_logic_vector'("0");
+            pc_sel_register(2 downto 0) <= std_logic_vector'("001");
+         ELSIF ((pres_state=147) AND
+                (s_data(1 DOWNTO 1)=std_logic_vector'("1"))) THEN 
+            next_state<=157;
          ELSIF ((pres_state=157)) THEN 
             next_state<=pres_state_plus_1;
          ELSIF ((pres_state=158)) THEN 
             next_state<=pres_state_plus_1;
+            rs1_data_register(4 downto 0) <= s_data(0) & s_data(1) &
+                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
+                  FIFO_s_data(2)(0);
+            result_select_register(2 downto 0) <= std_logic_vector'("001");
+            alu_ctrl_register(2 downto 0) <= std_logic_vector'("111");
          ELSIF ((pres_state=159)) THEN 
-            next_state<=0;
-         ELSIF ((pres_state=105) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("10"))) THEN 
-            next_state<=160;
-         ELSIF ((pres_state=160) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=160)) THEN 
             next_state<=pres_state_plus_1;
          ELSIF ((pres_state=161) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
+                (s_data(0 DOWNTO 0)=std_logic_vector'("0"))) THEN 
             next_state<=pres_state_plus_1;
+            rs2_data_register(4 downto 0) <= s_data(1 downto 1) &
+                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
+                  FIFO_s_data(2)(0) & FIFO_s_data(2)(1);
          ELSIF ((pres_state=162) AND
                 (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
             next_state<=pres_state_plus_1;
@@ -814,1491 +921,1035 @@ BEGIN
          ELSIF ((pres_state=164) AND
                 (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=165) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=166) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=167) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=168) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=169) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=170) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
-            next_state<=pres_state_plus_1;
-            go_register(1 downto 0) <= std_logic_vector'("10");
-         ELSIF ((pres_state=171) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
+            alu_funct_register(0 downto 0) <= std_logic_vector'("0");
+            execution_type_register(0 downto 0) <= std_logic_vector'("1");
+            execution_enable_register(0 downto 0) <= std_logic_vector'("1");
+            need_writeback_register(0 downto 0) <= std_logic_vector'("1");
+            pc_sel_register(2 downto 0) <= std_logic_vector'("000");
+         ELSIF ((pres_state=165)) THEN 
             next_state<=0;
-            rs_sel_register(1 downto 0) <= std_logic_vector'("11");
-            go_register(1 downto 0) <= std_logic_vector'("00");
-         ELSIF ((pres_state=166) AND
+            execution_enable_register(0 downto 0) <= std_logic_vector'("0");
+            need_writeback_register(0 downto 0) <= std_logic_vector'("0");
+            com_enable_register(0 downto 0) <= std_logic_vector'("0");
+            pc_sel_register(2 downto 0) <= std_logic_vector'("001");
+         ELSIF ((pres_state=83) AND
                 (s_data(1 DOWNTO 0)=std_logic_vector'("10"))) THEN 
-            next_state<=172;
-         ELSIF ((pres_state=172) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=173) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=174) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=175) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
-            next_state<=pres_state_plus_1;
-            go_register(1 downto 0) <= std_logic_vector'("10");
-         ELSIF ((pres_state=176) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
-            next_state<=0;
-            rs_sel_register(1 downto 0) <= std_logic_vector'("11");
-            go_register(1 downto 0) <= std_logic_vector'("00");
-         ELSIF ((pres_state=105) AND
+            next_state<=166;
+         ELSIF ((pres_state=166) AND
                 (s_data(1 DOWNTO 1)=std_logic_vector'("0"))) THEN 
-            next_state<=177;
-         ELSIF ((pres_state=177)) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=178)) THEN 
+         ELSIF ((pres_state=167)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=168)) THEN 
             next_state<=pres_state_plus_1;
             rd_data_register(4 downto 0) <= s_data(0) & s_data(1) &
                   FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
                   FIFO_s_data(2)(0);
-            rs_sel_register(1 downto 0) <= std_logic_vector'("00");
-         ELSIF ((pres_state=179) AND
+            rs_sel_register(1 downto 0) <= std_logic_vector'("10");
+         ELSIF ((pres_state=169) AND
                 (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=180) AND
+         ELSIF ((pres_state=170) AND
                 (s_data(1 DOWNTO 1)=std_logic_vector'("0"))) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=181)) THEN 
+         ELSIF ((pres_state=171)) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=182)) THEN 
+         ELSIF ((pres_state=172)) THEN 
             next_state<=pres_state_plus_1;
             rs1_data_register(4 downto 0) <= s_data(0) & s_data(1) &
                   FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
                   FIFO_s_data(2)(0);
-            result_select_register(2 downto 0) <= std_logic_vector'("001");
             alu_ctrl_register(2 downto 0) <= std_logic_vector'("000");
+            result_select_register(2 downto 0) <= std_logic_vector'("001");
+         ELSIF ((pres_state=173)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=174)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=175)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=176)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=177)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=178)) THEN 
+            next_state<=pres_state_plus_1;
+            op2_alt_register(31 downto 0) <= std_logic_vector'("00000000000000000000") &
+                  s_data(0) & s_data(1) &
+                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
+                  FIFO_s_data(2)(0) & FIFO_s_data(2)(1) &
+                  FIFO_s_data(3)(0) & FIFO_s_data(3)(1) &
+                  FIFO_s_data(4)(0) & FIFO_s_data(4)(1) &
+                  FIFO_s_data(5)(0) & FIFO_s_data(5)(1);
+            alu_funct_register(0 downto 0) <= std_logic_vector'("0");
+            execution_type_register(0 downto 0) <= std_logic_vector'("1");
+            execution_enable_register(0 downto 0) <= std_logic_vector'("1");
+            need_writeback_register(0 downto 0) <= std_logic_vector'("1");
+            pc_sel_register(2 downto 0) <= std_logic_vector'("000");
+         ELSIF ((pres_state=179)) THEN 
+            next_state<=0;
+            execution_enable_register(0 downto 0) <= std_logic_vector'("0");
+            need_writeback_register(0 downto 0) <= std_logic_vector'("0");
+            com_enable_register(0 downto 0) <= std_logic_vector'("0");
+            pc_sel_register(2 downto 0) <= std_logic_vector'("001");
+         ELSIF ((pres_state=170) AND
+                (s_data(1 DOWNTO 1)=std_logic_vector'("1"))) THEN 
+            next_state<=180;
+         ELSIF ((pres_state=180)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=181)) THEN 
+            next_state<=pres_state_plus_1;
+            rs1_data_register(4 downto 0) <= s_data(0) & s_data(1) &
+                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
+                  FIFO_s_data(2)(0);
+            alu_ctrl_register(2 downto 0) <= std_logic_vector'("100");
+            result_select_register(2 downto 0) <= std_logic_vector'("001");
+         ELSIF ((pres_state=182)) THEN 
+            next_state<=pres_state_plus_1;
          ELSIF ((pres_state=183)) THEN 
             next_state<=pres_state_plus_1;
          ELSIF ((pres_state=184)) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=185) AND
-                (s_data(0 DOWNTO 0)=std_logic_vector'("0"))) THEN 
+         ELSIF ((pres_state=185)) THEN 
             next_state<=pres_state_plus_1;
-            rs2_data_register(4 downto 0) <= s_data(1 downto 1) &
+         ELSIF ((pres_state=186)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=187)) THEN 
+            next_state<=pres_state_plus_1;
+            op2_alt_register(31 downto 0) <= std_logic_vector'("00000000000000000000") &
+                  s_data(0) & s_data(1) &
                   FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
-                  FIFO_s_data(2)(0) & FIFO_s_data(2)(1);
-         ELSIF ((pres_state=186) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=187) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=188) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
-            next_state<=pres_state_plus_1;
+                  FIFO_s_data(2)(0) & FIFO_s_data(2)(1) &
+                  FIFO_s_data(3)(0) & FIFO_s_data(3)(1) &
+                  FIFO_s_data(4)(0) & FIFO_s_data(4)(1) &
+                  FIFO_s_data(5)(0) & FIFO_s_data(5)(1);
             alu_funct_register(0 downto 0) <= std_logic_vector'("0");
             execution_type_register(0 downto 0) <= std_logic_vector'("1");
             execution_enable_register(0 downto 0) <= std_logic_vector'("1");
             need_writeback_register(0 downto 0) <= std_logic_vector'("1");
-            go_register(1 downto 0) <= std_logic_vector'("10");
             pc_sel_register(2 downto 0) <= std_logic_vector'("000");
-         ELSIF ((pres_state=189)) THEN 
+         ELSIF ((pres_state=188)) THEN 
             next_state<=0;
             execution_enable_register(0 downto 0) <= std_logic_vector'("0");
             need_writeback_register(0 downto 0) <= std_logic_vector'("0");
             com_enable_register(0 downto 0) <= std_logic_vector'("0");
-            go_register(1 downto 0) <= std_logic_vector'("00");
             pc_sel_register(2 downto 0) <= std_logic_vector'("001");
-         ELSIF ((pres_state=188) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("10"))) THEN 
-            next_state<=190;
-            alu_funct_register(0 downto 0) <= std_logic_vector'("1");
-            execution_type_register(0 downto 0) <= std_logic_vector'("1");
-            execution_enable_register(0 downto 0) <= std_logic_vector'("1");
-            need_writeback_register(0 downto 0) <= std_logic_vector'("1");
-            go_register(1 downto 0) <= std_logic_vector'("10");
-            pc_sel_register(2 downto 0) <= std_logic_vector'("000");
-         ELSIF ((pres_state=190)) THEN 
-            next_state<=0;
-            execution_enable_register(0 downto 0) <= std_logic_vector'("0");
-            need_writeback_register(0 downto 0) <= std_logic_vector'("0");
-            com_enable_register(0 downto 0) <= std_logic_vector'("0");
-            go_register(1 downto 0) <= std_logic_vector'("00");
-            pc_sel_register(2 downto 0) <= std_logic_vector'("001");
-         ELSIF ((pres_state=180) AND
-                (s_data(1 DOWNTO 1)=std_logic_vector'("1"))) THEN 
-            next_state<=191;
-         ELSIF ((pres_state=191)) THEN 
+         ELSIF ((pres_state=169) AND
+                (s_data(1 DOWNTO 0)=std_logic_vector'("01"))) THEN 
+            next_state<=189;
+         ELSIF ((pres_state=189) AND
+                (s_data(1 DOWNTO 1)=std_logic_vector'("0"))) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=192)) THEN 
+         ELSIF ((pres_state=190)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=191)) THEN 
             next_state<=pres_state_plus_1;
             rs1_data_register(4 downto 0) <= s_data(0) & s_data(1) &
                   FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
                   FIFO_s_data(2)(0);
+            alu_ctrl_register(2 downto 0) <= std_logic_vector'("010");
             result_select_register(2 downto 0) <= std_logic_vector'("001");
-            alu_ctrl_register(2 downto 0) <= std_logic_vector'("100");
+         ELSIF ((pres_state=192)) THEN 
+            next_state<=pres_state_plus_1;
          ELSIF ((pres_state=193)) THEN 
             next_state<=pres_state_plus_1;
          ELSIF ((pres_state=194)) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=195) AND
-                (s_data(0 DOWNTO 0)=std_logic_vector'("0"))) THEN 
+         ELSIF ((pres_state=195)) THEN 
             next_state<=pres_state_plus_1;
-            rs2_data_register(4 downto 0) <= s_data(1 downto 1) &
+         ELSIF ((pres_state=196)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=197)) THEN 
+            next_state<=pres_state_plus_1;
+            op2_alt_register(31 downto 0) <= std_logic_vector'("00000000000000000000") &
+                  s_data(0) & s_data(1) &
                   FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
-                  FIFO_s_data(2)(0) & FIFO_s_data(2)(1);
-         ELSIF ((pres_state=196) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=197) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=198) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
-            next_state<=pres_state_plus_1;
+                  FIFO_s_data(2)(0) & FIFO_s_data(2)(1) &
+                  FIFO_s_data(3)(0) & FIFO_s_data(3)(1) &
+                  FIFO_s_data(4)(0) & FIFO_s_data(4)(1) &
+                  FIFO_s_data(5)(0) & FIFO_s_data(5)(1);
             alu_funct_register(0 downto 0) <= std_logic_vector'("0");
             execution_type_register(0 downto 0) <= std_logic_vector'("1");
             execution_enable_register(0 downto 0) <= std_logic_vector'("1");
             need_writeback_register(0 downto 0) <= std_logic_vector'("1");
-            go_register(1 downto 0) <= std_logic_vector'("10");
             pc_sel_register(2 downto 0) <= std_logic_vector'("000");
-         ELSIF ((pres_state=199)) THEN 
+         ELSIF ((pres_state=198)) THEN 
             next_state<=0;
             execution_enable_register(0 downto 0) <= std_logic_vector'("0");
             need_writeback_register(0 downto 0) <= std_logic_vector'("0");
             com_enable_register(0 downto 0) <= std_logic_vector'("0");
-            go_register(1 downto 0) <= std_logic_vector'("00");
             pc_sel_register(2 downto 0) <= std_logic_vector'("001");
-         ELSIF ((pres_state=179) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("10"))) THEN 
-            next_state<=200;
-         ELSIF ((pres_state=200) AND
-                (s_data(1 DOWNTO 1)=std_logic_vector'("0"))) THEN 
+         ELSIF ((pres_state=189) AND
+                (s_data(1 DOWNTO 1)=std_logic_vector'("1"))) THEN 
+            next_state<=199;
+         ELSIF ((pres_state=199)) THEN 
             next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=200)) THEN 
+            next_state<=pres_state_plus_1;
+            rs1_data_register(4 downto 0) <= s_data(0) & s_data(1) &
+                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
+                  FIFO_s_data(2)(0);
+            alu_ctrl_register(2 downto 0) <= std_logic_vector'("110");
+            result_select_register(2 downto 0) <= std_logic_vector'("001");
          ELSIF ((pres_state=201)) THEN 
             next_state<=pres_state_plus_1;
          ELSIF ((pres_state=202)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=203)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=204)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=205)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=206)) THEN 
+            next_state<=pres_state_plus_1;
+            op2_alt_register(31 downto 0) <= std_logic_vector'("00000000000000000000") &
+                  s_data(0) & s_data(1) &
+                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
+                  FIFO_s_data(2)(0) & FIFO_s_data(2)(1) &
+                  FIFO_s_data(3)(0) & FIFO_s_data(3)(1) &
+                  FIFO_s_data(4)(0) & FIFO_s_data(4)(1) &
+                  FIFO_s_data(5)(0) & FIFO_s_data(5)(1);
+            alu_funct_register(0 downto 0) <= std_logic_vector'("0");
+            execution_type_register(0 downto 0) <= std_logic_vector'("1");
+            execution_enable_register(0 downto 0) <= std_logic_vector'("1");
+            need_writeback_register(0 downto 0) <= std_logic_vector'("1");
+            pc_sel_register(2 downto 0) <= std_logic_vector'("000");
+         ELSIF ((pres_state=207)) THEN 
+            next_state<=0;
+            execution_enable_register(0 downto 0) <= std_logic_vector'("0");
+            need_writeback_register(0 downto 0) <= std_logic_vector'("0");
+            com_enable_register(0 downto 0) <= std_logic_vector'("0");
+            pc_sel_register(2 downto 0) <= std_logic_vector'("001");
+         ELSIF ((pres_state=169) AND
+                (s_data(1 DOWNTO 0)=std_logic_vector'("11"))) THEN 
+            next_state<=208;
+         ELSIF ((pres_state=208) AND
+                (s_data(1 DOWNTO 1)=std_logic_vector'("0"))) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=209)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=210)) THEN 
+            next_state<=pres_state_plus_1;
+            rs1_data_register(4 downto 0) <= s_data(0) & s_data(1) &
+                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
+                  FIFO_s_data(2)(0);
+            alu_ctrl_register(2 downto 0) <= std_logic_vector'("011");
+            result_select_register(2 downto 0) <= std_logic_vector'("001");
+         ELSIF ((pres_state=211)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=212)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=213)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=214)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=215)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=216)) THEN 
+            next_state<=pres_state_plus_1;
+            op2_alt_register(31 downto 0) <= std_logic_vector'("00000000000000000000") &
+                  s_data(0) & s_data(1) &
+                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
+                  FIFO_s_data(2)(0) & FIFO_s_data(2)(1) &
+                  FIFO_s_data(3)(0) & FIFO_s_data(3)(1) &
+                  FIFO_s_data(4)(0) & FIFO_s_data(4)(1) &
+                  FIFO_s_data(5)(0) & FIFO_s_data(5)(1);
+            alu_funct_register(0 downto 0) <= std_logic_vector'("0");
+            execution_type_register(0 downto 0) <= std_logic_vector'("1");
+            execution_enable_register(0 downto 0) <= std_logic_vector'("1");
+            need_writeback_register(0 downto 0) <= std_logic_vector'("1");
+            pc_sel_register(2 downto 0) <= std_logic_vector'("000");
+         ELSIF ((pres_state=217)) THEN 
+            next_state<=0;
+            execution_enable_register(0 downto 0) <= std_logic_vector'("0");
+            need_writeback_register(0 downto 0) <= std_logic_vector'("0");
+            com_enable_register(0 downto 0) <= std_logic_vector'("0");
+            pc_sel_register(2 downto 0) <= std_logic_vector'("001");
+         ELSIF ((pres_state=208) AND
+                (s_data(1 DOWNTO 1)=std_logic_vector'("1"))) THEN 
+            next_state<=218;
+         ELSIF ((pres_state=218)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=219)) THEN 
+            next_state<=pres_state_plus_1;
+            rs1_data_register(4 downto 0) <= s_data(0) & s_data(1) &
+                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
+                  FIFO_s_data(2)(0);
+            alu_ctrl_register(2 downto 0) <= std_logic_vector'("111");
+            result_select_register(2 downto 0) <= std_logic_vector'("001");
+         ELSIF ((pres_state=220)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=221)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=222)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=223)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=224)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=225)) THEN 
+            next_state<=pres_state_plus_1;
+            op2_alt_register(31 downto 0) <= std_logic_vector'("00000000000000000000") &
+                  s_data(0) & s_data(1) &
+                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
+                  FIFO_s_data(2)(0) & FIFO_s_data(2)(1) &
+                  FIFO_s_data(3)(0) & FIFO_s_data(3)(1) &
+                  FIFO_s_data(4)(0) & FIFO_s_data(4)(1) &
+                  FIFO_s_data(5)(0) & FIFO_s_data(5)(1);
+            alu_funct_register(0 downto 0) <= std_logic_vector'("0");
+            execution_type_register(0 downto 0) <= std_logic_vector'("1");
+            execution_enable_register(0 downto 0) <= std_logic_vector'("1");
+            need_writeback_register(0 downto 0) <= std_logic_vector'("1");
+            pc_sel_register(2 downto 0) <= std_logic_vector'("000");
+         ELSIF ((pres_state=226)) THEN 
+            next_state<=0;
+            execution_enable_register(0 downto 0) <= std_logic_vector'("0");
+            need_writeback_register(0 downto 0) <= std_logic_vector'("0");
+            com_enable_register(0 downto 0) <= std_logic_vector'("0");
+            pc_sel_register(2 downto 0) <= std_logic_vector'("001");
+         ELSIF ((pres_state=169) AND
+                (s_data(1 DOWNTO 0)=std_logic_vector'("10"))) THEN 
+            next_state<=227;
+         ELSIF ((pres_state=227) AND
+                (s_data(1 DOWNTO 1)=std_logic_vector'("0"))) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=228)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=229)) THEN 
             next_state<=pres_state_plus_1;
             rs1_data_register(4 downto 0) <= s_data(0) & s_data(1) &
                   FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
                   FIFO_s_data(2)(0);
             result_select_register(2 downto 0) <= std_logic_vector'("001");
             alu_ctrl_register(2 downto 0) <= std_logic_vector'("001");
-         ELSIF ((pres_state=203)) THEN 
+         ELSIF ((pres_state=230)) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=204)) THEN 
+         ELSIF ((pres_state=231)) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=205) AND
+         ELSIF ((pres_state=232) AND
                 (s_data(0 DOWNTO 0)=std_logic_vector'("0"))) THEN 
             next_state<=pres_state_plus_1;
-            rs2_data_register(4 downto 0) <= s_data(1 downto 1) &
+            shift_imm_register(4 downto 0) <= s_data(1 downto 1) &
                   FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
                   FIFO_s_data(2)(0) & FIFO_s_data(2)(1);
-         ELSIF ((pres_state=206) AND
+         ELSIF ((pres_state=233) AND
                 (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=207) AND
+         ELSIF ((pres_state=234) AND
                 (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=208) AND
+         ELSIF ((pres_state=235) AND
                 (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
             next_state<=pres_state_plus_1;
             alu_funct_register(0 downto 0) <= std_logic_vector'("0");
             execution_type_register(0 downto 0) <= std_logic_vector'("1");
             execution_enable_register(0 downto 0) <= std_logic_vector'("1");
             need_writeback_register(0 downto 0) <= std_logic_vector'("1");
-            go_register(1 downto 0) <= std_logic_vector'("10");
             pc_sel_register(2 downto 0) <= std_logic_vector'("000");
-         ELSIF ((pres_state=209)) THEN 
+         ELSIF ((pres_state=236)) THEN 
             next_state<=0;
             execution_enable_register(0 downto 0) <= std_logic_vector'("0");
             need_writeback_register(0 downto 0) <= std_logic_vector'("0");
             com_enable_register(0 downto 0) <= std_logic_vector'("0");
-            go_register(1 downto 0) <= std_logic_vector'("00");
             pc_sel_register(2 downto 0) <= std_logic_vector'("001");
-         ELSIF ((pres_state=200) AND
+         ELSIF ((pres_state=227) AND
                 (s_data(1 DOWNTO 1)=std_logic_vector'("1"))) THEN 
-            next_state<=210;
-         ELSIF ((pres_state=210)) THEN 
+            next_state<=237;
+         ELSIF ((pres_state=237)) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=211)) THEN 
+         ELSIF ((pres_state=238)) THEN 
             next_state<=pres_state_plus_1;
             rs1_data_register(4 downto 0) <= s_data(0) & s_data(1) &
                   FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
                   FIFO_s_data(2)(0);
             result_select_register(2 downto 0) <= std_logic_vector'("001");
             alu_ctrl_register(2 downto 0) <= std_logic_vector'("101");
-         ELSIF ((pres_state=212)) THEN 
+         ELSIF ((pres_state=239)) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=213)) THEN 
+         ELSIF ((pres_state=240)) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=214) AND
+         ELSIF ((pres_state=241) AND
                 (s_data(0 DOWNTO 0)=std_logic_vector'("0"))) THEN 
             next_state<=pres_state_plus_1;
-            rs2_data_register(4 downto 0) <= s_data(1 downto 1) &
+            shift_imm_register(4 downto 0) <= s_data(1 downto 1) &
                   FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
                   FIFO_s_data(2)(0) & FIFO_s_data(2)(1);
-         ELSIF ((pres_state=215) AND
+         ELSIF ((pres_state=242) AND
                 (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=216) AND
+         ELSIF ((pres_state=243) AND
                 (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=217) AND
+         ELSIF ((pres_state=244) AND
                 (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
             next_state<=pres_state_plus_1;
             alu_funct_register(0 downto 0) <= std_logic_vector'("0");
             execution_type_register(0 downto 0) <= std_logic_vector'("1");
             execution_enable_register(0 downto 0) <= std_logic_vector'("1");
             need_writeback_register(0 downto 0) <= std_logic_vector'("1");
-            go_register(1 downto 0) <= std_logic_vector'("10");
             pc_sel_register(2 downto 0) <= std_logic_vector'("000");
-         ELSIF ((pres_state=218)) THEN 
+         ELSIF ((pres_state=245)) THEN 
             next_state<=0;
             execution_enable_register(0 downto 0) <= std_logic_vector'("0");
             need_writeback_register(0 downto 0) <= std_logic_vector'("0");
             com_enable_register(0 downto 0) <= std_logic_vector'("0");
-            go_register(1 downto 0) <= std_logic_vector'("00");
             pc_sel_register(2 downto 0) <= std_logic_vector'("001");
-         ELSIF ((pres_state=217) AND
+         ELSIF ((pres_state=244) AND
                 (s_data(1 DOWNTO 0)=std_logic_vector'("10"))) THEN 
-            next_state<=219;
+            next_state<=246;
             alu_funct_register(0 downto 0) <= std_logic_vector'("1");
             execution_type_register(0 downto 0) <= std_logic_vector'("1");
             execution_enable_register(0 downto 0) <= std_logic_vector'("1");
             need_writeback_register(0 downto 0) <= std_logic_vector'("1");
-            go_register(1 downto 0) <= std_logic_vector'("10");
             pc_sel_register(2 downto 0) <= std_logic_vector'("000");
-         ELSIF ((pres_state=219)) THEN 
+         ELSIF ((pres_state=246)) THEN 
             next_state<=0;
             execution_enable_register(0 downto 0) <= std_logic_vector'("0");
             need_writeback_register(0 downto 0) <= std_logic_vector'("0");
             com_enable_register(0 downto 0) <= std_logic_vector'("0");
-            go_register(1 downto 0) <= std_logic_vector'("00");
             pc_sel_register(2 downto 0) <= std_logic_vector'("001");
-         ELSIF ((pres_state=179) AND
+         ELSIF ((pres_state=83) AND
                 (s_data(1 DOWNTO 0)=std_logic_vector'("01"))) THEN 
-            next_state<=220;
-         ELSIF ((pres_state=220) AND
-                (s_data(1 DOWNTO 1)=std_logic_vector'("0"))) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=221)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=222)) THEN 
-            next_state<=pres_state_plus_1;
-            rs1_data_register(4 downto 0) <= s_data(0) & s_data(1) &
-                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
-                  FIFO_s_data(2)(0);
-            result_select_register(2 downto 0) <= std_logic_vector'("001");
-            alu_ctrl_register(2 downto 0) <= std_logic_vector'("010");
-         ELSIF ((pres_state=223)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=224)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=225) AND
-                (s_data(0 DOWNTO 0)=std_logic_vector'("0"))) THEN 
-            next_state<=pres_state_plus_1;
-            rs2_data_register(4 downto 0) <= s_data(1 downto 1) &
-                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
-                  FIFO_s_data(2)(0) & FIFO_s_data(2)(1);
-         ELSIF ((pres_state=226) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=227) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=228) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
-            next_state<=pres_state_plus_1;
-            alu_funct_register(0 downto 0) <= std_logic_vector'("0");
-            execution_type_register(0 downto 0) <= std_logic_vector'("1");
-            execution_enable_register(0 downto 0) <= std_logic_vector'("1");
-            need_writeback_register(0 downto 0) <= std_logic_vector'("1");
-            go_register(1 downto 0) <= std_logic_vector'("10");
-            pc_sel_register(2 downto 0) <= std_logic_vector'("000");
-         ELSIF ((pres_state=229)) THEN 
-            next_state<=0;
-            execution_enable_register(0 downto 0) <= std_logic_vector'("0");
-            need_writeback_register(0 downto 0) <= std_logic_vector'("0");
-            com_enable_register(0 downto 0) <= std_logic_vector'("0");
-            go_register(1 downto 0) <= std_logic_vector'("00");
-            pc_sel_register(2 downto 0) <= std_logic_vector'("001");
-         ELSIF ((pres_state=220) AND
-                (s_data(1 DOWNTO 1)=std_logic_vector'("1"))) THEN 
-            next_state<=230;
-         ELSIF ((pres_state=230)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=231)) THEN 
-            next_state<=pres_state_plus_1;
-            rs1_data_register(4 downto 0) <= s_data(0) & s_data(1) &
-                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
-                  FIFO_s_data(2)(0);
-            result_select_register(2 downto 0) <= std_logic_vector'("001");
-            alu_ctrl_register(2 downto 0) <= std_logic_vector'("110");
-         ELSIF ((pres_state=232)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=233)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=234) AND
-                (s_data(0 DOWNTO 0)=std_logic_vector'("0"))) THEN 
-            next_state<=pres_state_plus_1;
-            rs2_data_register(4 downto 0) <= s_data(1 downto 1) &
-                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
-                  FIFO_s_data(2)(0) & FIFO_s_data(2)(1);
-         ELSIF ((pres_state=235) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=236) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=237) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
-            next_state<=pres_state_plus_1;
-            alu_funct_register(0 downto 0) <= std_logic_vector'("0");
-            execution_type_register(0 downto 0) <= std_logic_vector'("1");
-            execution_enable_register(0 downto 0) <= std_logic_vector'("1");
-            need_writeback_register(0 downto 0) <= std_logic_vector'("1");
-            go_register(1 downto 0) <= std_logic_vector'("10");
-            pc_sel_register(2 downto 0) <= std_logic_vector'("000");
-         ELSIF ((pres_state=238)) THEN 
-            next_state<=0;
-            execution_enable_register(0 downto 0) <= std_logic_vector'("0");
-            need_writeback_register(0 downto 0) <= std_logic_vector'("0");
-            com_enable_register(0 downto 0) <= std_logic_vector'("0");
-            go_register(1 downto 0) <= std_logic_vector'("00");
-            pc_sel_register(2 downto 0) <= std_logic_vector'("001");
-         ELSIF ((pres_state=179) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("11"))) THEN 
-            next_state<=239;
-         ELSIF ((pres_state=239) AND
-                (s_data(1 DOWNTO 1)=std_logic_vector'("0"))) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=240)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=241)) THEN 
-            next_state<=pres_state_plus_1;
-            rs1_data_register(4 downto 0) <= s_data(0) & s_data(1) &
-                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
-                  FIFO_s_data(2)(0);
-            result_select_register(2 downto 0) <= std_logic_vector'("001");
-            alu_ctrl_register(2 downto 0) <= std_logic_vector'("011");
-         ELSIF ((pres_state=242)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=243)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=244) AND
-                (s_data(0 DOWNTO 0)=std_logic_vector'("0"))) THEN 
-            next_state<=pres_state_plus_1;
-            rs2_data_register(4 downto 0) <= s_data(1 downto 1) &
-                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
-                  FIFO_s_data(2)(0) & FIFO_s_data(2)(1);
-         ELSIF ((pres_state=245) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=246) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
-            next_state<=pres_state_plus_1;
+            next_state<=247;
          ELSIF ((pres_state=247) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
+                (s_data(1 DOWNTO 1)=std_logic_vector'("0"))) THEN 
             next_state<=pres_state_plus_1;
-            alu_funct_register(0 downto 0) <= std_logic_vector'("0");
-            execution_type_register(0 downto 0) <= std_logic_vector'("1");
-            execution_enable_register(0 downto 0) <= std_logic_vector'("1");
-            need_writeback_register(0 downto 0) <= std_logic_vector'("1");
-            go_register(1 downto 0) <= std_logic_vector'("10");
-            pc_sel_register(2 downto 0) <= std_logic_vector'("000");
          ELSIF ((pres_state=248)) THEN 
-            next_state<=0;
-            execution_enable_register(0 downto 0) <= std_logic_vector'("0");
-            need_writeback_register(0 downto 0) <= std_logic_vector'("0");
-            com_enable_register(0 downto 0) <= std_logic_vector'("0");
-            go_register(1 downto 0) <= std_logic_vector'("00");
-            pc_sel_register(2 downto 0) <= std_logic_vector'("001");
-         ELSIF ((pres_state=239) AND
-                (s_data(1 DOWNTO 1)=std_logic_vector'("1"))) THEN 
-            next_state<=249;
+            next_state<=pres_state_plus_1;
          ELSIF ((pres_state=249)) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=250)) THEN 
-            next_state<=pres_state_plus_1;
-            rs1_data_register(4 downto 0) <= s_data(0) & s_data(1) &
-                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
-                  FIFO_s_data(2)(0);
-            result_select_register(2 downto 0) <= std_logic_vector'("001");
-            alu_ctrl_register(2 downto 0) <= std_logic_vector'("111");
-         ELSIF ((pres_state=251)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=252)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=253) AND
-                (s_data(0 DOWNTO 0)=std_logic_vector'("0"))) THEN 
-            next_state<=pres_state_plus_1;
-            rs2_data_register(4 downto 0) <= s_data(1 downto 1) &
-                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
-                  FIFO_s_data(2)(0) & FIFO_s_data(2)(1);
-         ELSIF ((pres_state=254) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=255) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=256) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
-            next_state<=pres_state_plus_1;
-            alu_funct_register(0 downto 0) <= std_logic_vector'("0");
-            execution_type_register(0 downto 0) <= std_logic_vector'("1");
-            execution_enable_register(0 downto 0) <= std_logic_vector'("1");
-            need_writeback_register(0 downto 0) <= std_logic_vector'("1");
-            go_register(1 downto 0) <= std_logic_vector'("10");
-            pc_sel_register(2 downto 0) <= std_logic_vector'("000");
-         ELSIF ((pres_state=257)) THEN 
-            next_state<=0;
-            execution_enable_register(0 downto 0) <= std_logic_vector'("0");
-            need_writeback_register(0 downto 0) <= std_logic_vector'("0");
-            com_enable_register(0 downto 0) <= std_logic_vector'("0");
-            go_register(1 downto 0) <= std_logic_vector'("00");
-            pc_sel_register(2 downto 0) <= std_logic_vector'("001");
-         ELSIF ((pres_state=104) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("10"))) THEN 
-            next_state<=258;
-         ELSIF ((pres_state=258) AND
-                (s_data(1 DOWNTO 1)=std_logic_vector'("0"))) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=259)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=260)) THEN 
-            next_state<=pres_state_plus_1;
-            rd_data_register(4 downto 0) <= s_data(0) & s_data(1) &
+            imm5_data_register(4 downto 0) <= s_data(0) & s_data(1) &
                   FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
                   FIFO_s_data(2)(0);
             rs_sel_register(1 downto 0) <= std_logic_vector'("10");
-         ELSIF ((pres_state=261) AND
+         ELSIF ((pres_state=250) AND
                 (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=262) AND
+         ELSIF ((pres_state=251) AND
                 (s_data(1 DOWNTO 1)=std_logic_vector'("0"))) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=263)) THEN 
+         ELSIF ((pres_state=252)) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=264)) THEN 
+         ELSIF ((pres_state=253)) THEN 
             next_state<=pres_state_plus_1;
             rs1_data_register(4 downto 0) <= s_data(0) & s_data(1) &
                   FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
                   FIFO_s_data(2)(0);
             alu_ctrl_register(2 downto 0) <= std_logic_vector'("000");
+            alu_funct_register(0 downto 0) <= std_logic_vector'("0");
             result_select_register(2 downto 0) <= std_logic_vector'("001");
+         ELSIF ((pres_state=254)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=255)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=256)) THEN 
+            next_state<=pres_state_plus_1;
+            rs2_data_register(4 downto 0) <= s_data(1 downto 1) &
+                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
+                  FIFO_s_data(2)(0) & FIFO_s_data(2)(1);
+         ELSIF ((pres_state=257)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=258)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=259)) THEN 
+            next_state<=pres_state_plus_1;
+            imm7_data_register(6 downto 0) <= s_data(0) & s_data(1) &
+                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
+                  FIFO_s_data(2)(0) & FIFO_s_data(2)(1) &
+                  FIFO_s_data(3)(0);
+         ELSIF ((pres_state=260)) THEN 
+            next_state<=pres_state_plus_1;
+            op2_alt_register(31 downto 0) <= S_immediate(31 downto 0);
+            execution_type_register(0 downto 0) <= std_logic_vector'("1");
+            execution_enable_register(0 downto 0) <= std_logic_vector'("1");
+         ELSIF ((pres_state=261)) THEN 
+            next_state<=pres_state_plus_1;
+            execution_enable_register(0 downto 0) <= std_logic_vector'("0");
+            com_enable_register(0 downto 0) <= std_logic_vector'("0");
+         ELSIF ((pres_state=262)) THEN 
+            next_state<=pres_state_plus_1;
+            reset_parity_register(0 downto 0) <= std_logic_vector'("0");
+            com_enable_register(0 downto 0) <= std_logic_vector'("1");
+            m_active_register(0 downto 0) <= std_logic_vector'("1");
+            internal_addr_register(1 downto 0) <= std_logic_vector'("00");
+            store_enable_register(0 downto 0) <= std_logic_vector'("1");
+         ELSIF ((pres_state=263)) THEN 
+            next_state<=pres_state_plus_1;
+            transmitting_register(0 downto 0) <= std_logic_vector'("1");
+            store_enable_register(0 downto 0) <= std_logic_vector'("0");
+            internal_m_data_register(1 downto 0) <= store_data(31 downto 30);
+            internal_addr_register(1 downto 0) <= reversed_result_bus(31 downto 30);
+         ELSIF ((pres_state=264)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_m_data_register(1 downto 0) <= store_data(29 downto 28);
+            internal_addr_register(1 downto 0) <= reversed_result_bus(29 downto 28);
          ELSIF ((pres_state=265)) THEN 
             next_state<=pres_state_plus_1;
+            internal_m_data_register(1 downto 0) <= store_data(27 downto 26);
+            internal_addr_register(1 downto 0) <= reversed_result_bus(27 downto 26);
          ELSIF ((pres_state=266)) THEN 
             next_state<=pres_state_plus_1;
+            internal_m_data_register(1 downto 0) <= store_data(25 downto 24);
+            internal_addr_register(1 downto 0) <= reversed_result_bus(25 downto 24);
          ELSIF ((pres_state=267)) THEN 
             next_state<=pres_state_plus_1;
+            internal_m_data_register(1 downto 0) <= store_data(23 downto 22);
+            internal_addr_register(1 downto 0) <= reversed_result_bus(23 downto 22);
          ELSIF ((pres_state=268)) THEN 
             next_state<=pres_state_plus_1;
+            internal_m_data_register(1 downto 0) <= store_data(21 downto 20);
+            internal_addr_register(1 downto 0) <= reversed_result_bus(21 downto 20);
          ELSIF ((pres_state=269)) THEN 
             next_state<=pres_state_plus_1;
+            internal_m_data_register(1 downto 0) <= store_data(19 downto 18);
+            internal_addr_register(1 downto 0) <= reversed_result_bus(19 downto 18);
          ELSIF ((pres_state=270)) THEN 
             next_state<=pres_state_plus_1;
-            op2_alt_register(31 downto 0) <= std_logic_vector'("00000000000000000000") &
-                  s_data(0) & s_data(1) &
-                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
-                  FIFO_s_data(2)(0) & FIFO_s_data(2)(1) &
-                  FIFO_s_data(3)(0) & FIFO_s_data(3)(1) &
-                  FIFO_s_data(4)(0) & FIFO_s_data(4)(1) &
-                  FIFO_s_data(5)(0) & FIFO_s_data(5)(1);
-            alu_funct_register(0 downto 0) <= std_logic_vector'("0");
-            execution_type_register(0 downto 0) <= std_logic_vector'("1");
-            execution_enable_register(0 downto 0) <= std_logic_vector'("1");
-            need_writeback_register(0 downto 0) <= std_logic_vector'("1");
-            go_register(1 downto 0) <= std_logic_vector'("10");
-            pc_sel_register(2 downto 0) <= std_logic_vector'("000");
+            internal_m_data_register(1 downto 0) <= store_data(17 downto 16);
+            internal_addr_register(1 downto 0) <= reversed_result_bus(17 downto 16);
          ELSIF ((pres_state=271)) THEN 
-            next_state<=0;
-            execution_enable_register(0 downto 0) <= std_logic_vector'("0");
-            need_writeback_register(0 downto 0) <= std_logic_vector'("0");
-            com_enable_register(0 downto 0) <= std_logic_vector'("0");
-            go_register(1 downto 0) <= std_logic_vector'("00");
-            pc_sel_register(2 downto 0) <= std_logic_vector'("001");
-         ELSIF ((pres_state=262) AND
-                (s_data(1 DOWNTO 1)=std_logic_vector'("1"))) THEN 
-            next_state<=272;
+            next_state<=pres_state_plus_1;
+            internal_m_data_register(1 downto 0) <= store_data(15 downto 14);
+            internal_addr_register(1 downto 0) <= reversed_result_bus(15 downto 14);
          ELSIF ((pres_state=272)) THEN 
             next_state<=pres_state_plus_1;
+            internal_m_data_register(1 downto 0) <= store_data(13 downto 12);
+            internal_addr_register(1 downto 0) <= reversed_result_bus(13 downto 12);
          ELSIF ((pres_state=273)) THEN 
             next_state<=pres_state_plus_1;
-            rs1_data_register(4 downto 0) <= s_data(0) & s_data(1) &
-                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
-                  FIFO_s_data(2)(0);
-            alu_ctrl_register(2 downto 0) <= std_logic_vector'("100");
-            result_select_register(2 downto 0) <= std_logic_vector'("001");
+            internal_m_data_register(1 downto 0) <= store_data(11 downto 10);
+            internal_addr_register(1 downto 0) <= reversed_result_bus(11 downto 10);
          ELSIF ((pres_state=274)) THEN 
             next_state<=pres_state_plus_1;
+            internal_m_data_register(1 downto 0) <= store_data(9 downto 8);
+            internal_addr_register(1 downto 0) <= reversed_result_bus(9 downto 8);
          ELSIF ((pres_state=275)) THEN 
             next_state<=pres_state_plus_1;
+            internal_m_data_register(1 downto 0) <= store_data(7 downto 6);
+            internal_addr_register(1 downto 0) <= reversed_result_bus(7 downto 6);
          ELSIF ((pres_state=276)) THEN 
             next_state<=pres_state_plus_1;
+            internal_m_data_register(1 downto 0) <= store_data(5 downto 4);
+            internal_addr_register(1 downto 0) <= reversed_result_bus(5 downto 4);
          ELSIF ((pres_state=277)) THEN 
             next_state<=pres_state_plus_1;
+            internal_m_data_register(1 downto 0) <= store_data(3 downto 2);
+            internal_addr_register(1 downto 0) <= reversed_result_bus(3 downto 2);
          ELSIF ((pres_state=278)) THEN 
             next_state<=pres_state_plus_1;
+            internal_m_data_register(1 downto 0) <= store_data(1 downto 0);
+            internal_addr_register(1 downto 0) <= reversed_result_bus(1 downto 0);
+            transmitting_register(0 downto 0) <= std_logic_vector'("0");
          ELSIF ((pres_state=279)) THEN 
             next_state<=pres_state_plus_1;
-            op2_alt_register(31 downto 0) <= std_logic_vector'("00000000000000000000") &
-                  s_data(0) & s_data(1) &
-                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
-                  FIFO_s_data(2)(0) & FIFO_s_data(2)(1) &
-                  FIFO_s_data(3)(0) & FIFO_s_data(3)(1) &
-                  FIFO_s_data(4)(0) & FIFO_s_data(4)(1) &
-                  FIFO_s_data(5)(0) & FIFO_s_data(5)(1);
-            alu_funct_register(0 downto 0) <= std_logic_vector'("0");
-            execution_type_register(0 downto 0) <= std_logic_vector'("1");
-            execution_enable_register(0 downto 0) <= std_logic_vector'("1");
-            need_writeback_register(0 downto 0) <= std_logic_vector'("1");
-            go_register(1 downto 0) <= std_logic_vector'("10");
-            pc_sel_register(2 downto 0) <= std_logic_vector'("000");
+            internal_addr_register(1 downto 0) <= parity_addr(1 downto 0);
+            internal_m_data_register(1 downto 0) <= parity_data(1 downto 0);
          ELSIF ((pres_state=280)) THEN 
-            next_state<=0;
-            execution_enable_register(0 downto 0) <= std_logic_vector'("0");
-            need_writeback_register(0 downto 0) <= std_logic_vector'("0");
-            com_enable_register(0 downto 0) <= std_logic_vector'("0");
-            go_register(1 downto 0) <= std_logic_vector'("00");
-            pc_sel_register(2 downto 0) <= std_logic_vector'("001");
-         ELSIF ((pres_state=261) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("01"))) THEN 
-            next_state<=281;
+            next_state<=pres_state_plus_1;
          ELSIF ((pres_state=281) AND
+                (s_active(0 DOWNTO 0)=std_logic_vector'("1"))) THEN 
+            next_state<=pres_state_plus_1;
+            m_active_register(0 downto 0) <= std_logic_vector'("0");
+            reset_parity_register(0 downto 0) <= std_logic_vector'("1");
+            com_enable_register(0 downto 0) <= std_logic_vector'("0");
+            pc_sel_register(2 downto 0) <= std_logic_vector'("000");
+         ELSIF ((pres_state=282)) THEN 
+            next_state<=0;
+            pc_sel_register(2 downto 0) <= std_logic_vector'("001");
+         ELSIF ((pres_state=281) AND
+                (s_active(0 DOWNTO 0)=std_logic_vector'("0"))) THEN 
+            next_state<=1;
+              next_state <= 0;  
+             m_active_register(0 downto 0) <= std_logic_vector'("0");
+            reset_parity_register(0 downto 0) <= std_logic_vector'("1");
+            com_enable_register(0 downto 0) <= std_logic_vector'("0");
+            com_enable_register(0 downto 0) <= std_logic_vector'("0");
+         ELSIF ((pres_state=250) AND
+                (s_data(1 DOWNTO 0)=std_logic_vector'("10"))) THEN 
+            next_state<=283;
+         ELSIF ((pres_state=283) AND
                 (s_data(1 DOWNTO 1)=std_logic_vector'("0"))) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=282)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=283)) THEN 
-            next_state<=pres_state_plus_1;
-            rs1_data_register(4 downto 0) <= s_data(0) & s_data(1) &
-                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
-                  FIFO_s_data(2)(0);
-            alu_ctrl_register(2 downto 0) <= std_logic_vector'("010");
-            result_select_register(2 downto 0) <= std_logic_vector'("001");
          ELSIF ((pres_state=284)) THEN 
             next_state<=pres_state_plus_1;
          ELSIF ((pres_state=285)) THEN 
             next_state<=pres_state_plus_1;
+            rs1_data_register(4 downto 0) <= s_data(0) & s_data(1) &
+                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
+                  FIFO_s_data(2)(0);
+            alu_ctrl_register(2 downto 0) <= std_logic_vector'("000");
+            alu_funct_register(0 downto 0) <= std_logic_vector'("0");
+            result_select_register(2 downto 0) <= std_logic_vector'("001");
          ELSIF ((pres_state=286)) THEN 
             next_state<=pres_state_plus_1;
          ELSIF ((pres_state=287)) THEN 
             next_state<=pres_state_plus_1;
          ELSIF ((pres_state=288)) THEN 
             next_state<=pres_state_plus_1;
+            rs2_data_register(4 downto 0) <= s_data(1 downto 1) &
+                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
+                  FIFO_s_data(2)(0) & FIFO_s_data(2)(1);
          ELSIF ((pres_state=289)) THEN 
             next_state<=pres_state_plus_1;
-            op2_alt_register(31 downto 0) <= std_logic_vector'("00000000000000000000") &
-                  s_data(0) & s_data(1) &
-                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
-                  FIFO_s_data(2)(0) & FIFO_s_data(2)(1) &
-                  FIFO_s_data(3)(0) & FIFO_s_data(3)(1) &
-                  FIFO_s_data(4)(0) & FIFO_s_data(4)(1) &
-                  FIFO_s_data(5)(0) & FIFO_s_data(5)(1);
-            alu_funct_register(0 downto 0) <= std_logic_vector'("0");
-            execution_type_register(0 downto 0) <= std_logic_vector'("1");
-            execution_enable_register(0 downto 0) <= std_logic_vector'("1");
-            need_writeback_register(0 downto 0) <= std_logic_vector'("1");
-            go_register(1 downto 0) <= std_logic_vector'("10");
-            pc_sel_register(2 downto 0) <= std_logic_vector'("000");
          ELSIF ((pres_state=290)) THEN 
-            next_state<=0;
-            execution_enable_register(0 downto 0) <= std_logic_vector'("0");
-            need_writeback_register(0 downto 0) <= std_logic_vector'("0");
-            com_enable_register(0 downto 0) <= std_logic_vector'("0");
-            go_register(1 downto 0) <= std_logic_vector'("00");
-            pc_sel_register(2 downto 0) <= std_logic_vector'("001");
-         ELSIF ((pres_state=281) AND
-                (s_data(1 DOWNTO 1)=std_logic_vector'("1"))) THEN 
-            next_state<=291;
+            next_state<=pres_state_plus_1;
          ELSIF ((pres_state=291)) THEN 
             next_state<=pres_state_plus_1;
+            imm7_data_register(6 downto 0) <= s_data(0) & s_data(1) &
+                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
+                  FIFO_s_data(2)(0) & FIFO_s_data(2)(1) &
+                  FIFO_s_data(3)(0);
          ELSIF ((pres_state=292)) THEN 
             next_state<=pres_state_plus_1;
-            rs1_data_register(4 downto 0) <= s_data(0) & s_data(1) &
-                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
-                  FIFO_s_data(2)(0);
-            alu_ctrl_register(2 downto 0) <= std_logic_vector'("110");
-            result_select_register(2 downto 0) <= std_logic_vector'("001");
+            op2_alt_register(31 downto 0) <= S_immediate(31 downto 0);
+            execution_type_register(0 downto 0) <= std_logic_vector'("1");
+            execution_enable_register(0 downto 0) <= std_logic_vector'("1");
          ELSIF ((pres_state=293)) THEN 
             next_state<=pres_state_plus_1;
+            execution_enable_register(0 downto 0) <= std_logic_vector'("0");
+            com_enable_register(0 downto 0) <= std_logic_vector'("0");
          ELSIF ((pres_state=294)) THEN 
             next_state<=pres_state_plus_1;
+            reset_parity_register(0 downto 0) <= std_logic_vector'("0");
+            com_enable_register(0 downto 0) <= std_logic_vector'("1");
+            m_active_register(0 downto 0) <= std_logic_vector'("1");
+            internal_addr_register(1 downto 0) <= std_logic_vector'("00");
+            store_enable_register(0 downto 0) <= std_logic_vector'("1");
          ELSIF ((pres_state=295)) THEN 
             next_state<=pres_state_plus_1;
+            transmitting_register(0 downto 0) <= std_logic_vector'("1");
+            store_enable_register(0 downto 0) <= std_logic_vector'("0");
+            internal_m_data_register(1 downto 0) <= store_data(31 downto 30);
+            internal_addr_register(1 downto 0) <= reversed_result_bus(31 downto 30);
          ELSIF ((pres_state=296)) THEN 
             next_state<=pres_state_plus_1;
+            internal_m_data_register(1 downto 0) <= store_data(29 downto 28);
+            internal_addr_register(1 downto 0) <= reversed_result_bus(29 downto 28);
          ELSIF ((pres_state=297)) THEN 
             next_state<=pres_state_plus_1;
+            internal_m_data_register(1 downto 0) <= store_data(27 downto 26);
+            internal_addr_register(1 downto 0) <= reversed_result_bus(27 downto 26);
          ELSIF ((pres_state=298)) THEN 
             next_state<=pres_state_plus_1;
-            op2_alt_register(31 downto 0) <= std_logic_vector'("00000000000000000000") &
-                  s_data(0) & s_data(1) &
-                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
-                  FIFO_s_data(2)(0) & FIFO_s_data(2)(1) &
-                  FIFO_s_data(3)(0) & FIFO_s_data(3)(1) &
-                  FIFO_s_data(4)(0) & FIFO_s_data(4)(1) &
-                  FIFO_s_data(5)(0) & FIFO_s_data(5)(1);
-            alu_funct_register(0 downto 0) <= std_logic_vector'("0");
-            execution_type_register(0 downto 0) <= std_logic_vector'("1");
-            execution_enable_register(0 downto 0) <= std_logic_vector'("1");
-            need_writeback_register(0 downto 0) <= std_logic_vector'("1");
-            go_register(1 downto 0) <= std_logic_vector'("10");
-            pc_sel_register(2 downto 0) <= std_logic_vector'("000");
+            internal_m_data_register(1 downto 0) <= store_data(25 downto 24);
+            internal_addr_register(1 downto 0) <= reversed_result_bus(25 downto 24);
          ELSIF ((pres_state=299)) THEN 
-            next_state<=0;
-            execution_enable_register(0 downto 0) <= std_logic_vector'("0");
-            need_writeback_register(0 downto 0) <= std_logic_vector'("0");
-            com_enable_register(0 downto 0) <= std_logic_vector'("0");
-            go_register(1 downto 0) <= std_logic_vector'("00");
-            pc_sel_register(2 downto 0) <= std_logic_vector'("001");
-         ELSIF ((pres_state=261) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("11"))) THEN 
-            next_state<=300;
-         ELSIF ((pres_state=300) AND
-                (s_data(1 DOWNTO 1)=std_logic_vector'("0"))) THEN 
             next_state<=pres_state_plus_1;
+            internal_m_data_register(1 downto 0) <= store_data(23 downto 22);
+            internal_addr_register(1 downto 0) <= reversed_result_bus(23 downto 22);
+         ELSIF ((pres_state=300)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_m_data_register(1 downto 0) <= store_data(21 downto 20);
+            internal_addr_register(1 downto 0) <= reversed_result_bus(21 downto 20);
          ELSIF ((pres_state=301)) THEN 
             next_state<=pres_state_plus_1;
+            internal_m_data_register(1 downto 0) <= store_data(19 downto 18);
+            internal_addr_register(1 downto 0) <= reversed_result_bus(19 downto 18);
          ELSIF ((pres_state=302)) THEN 
             next_state<=pres_state_plus_1;
-            rs1_data_register(4 downto 0) <= s_data(0) & s_data(1) &
-                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
-                  FIFO_s_data(2)(0);
-            alu_ctrl_register(2 downto 0) <= std_logic_vector'("011");
-            result_select_register(2 downto 0) <= std_logic_vector'("001");
+            internal_m_data_register(1 downto 0) <= store_data(17 downto 16);
+            internal_addr_register(1 downto 0) <= reversed_result_bus(17 downto 16);
          ELSIF ((pres_state=303)) THEN 
             next_state<=pres_state_plus_1;
+            internal_m_data_register(1 downto 0) <= store_data(15 downto 14);
+            internal_addr_register(1 downto 0) <= reversed_result_bus(15 downto 14);
          ELSIF ((pres_state=304)) THEN 
             next_state<=pres_state_plus_1;
+            internal_m_data_register(1 downto 0) <= store_data(13 downto 12);
+            internal_addr_register(1 downto 0) <= reversed_result_bus(13 downto 12);
          ELSIF ((pres_state=305)) THEN 
             next_state<=pres_state_plus_1;
+            internal_m_data_register(1 downto 0) <= store_data(11 downto 10);
+            internal_addr_register(1 downto 0) <= reversed_result_bus(11 downto 10);
          ELSIF ((pres_state=306)) THEN 
             next_state<=pres_state_plus_1;
+            internal_m_data_register(1 downto 0) <= store_data(9 downto 8);
+            internal_addr_register(1 downto 0) <= reversed_result_bus(9 downto 8);
          ELSIF ((pres_state=307)) THEN 
             next_state<=pres_state_plus_1;
+            internal_m_data_register(1 downto 0) <= store_data(7 downto 6);
+            internal_addr_register(1 downto 0) <= reversed_result_bus(7 downto 6);
          ELSIF ((pres_state=308)) THEN 
             next_state<=pres_state_plus_1;
-            op2_alt_register(31 downto 0) <= std_logic_vector'("00000000000000000000") &
-                  s_data(0) & s_data(1) &
-                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
-                  FIFO_s_data(2)(0) & FIFO_s_data(2)(1) &
-                  FIFO_s_data(3)(0) & FIFO_s_data(3)(1) &
-                  FIFO_s_data(4)(0) & FIFO_s_data(4)(1) &
-                  FIFO_s_data(5)(0) & FIFO_s_data(5)(1);
-            alu_funct_register(0 downto 0) <= std_logic_vector'("0");
-            execution_type_register(0 downto 0) <= std_logic_vector'("1");
-            execution_enable_register(0 downto 0) <= std_logic_vector'("1");
-            need_writeback_register(0 downto 0) <= std_logic_vector'("1");
-            go_register(1 downto 0) <= std_logic_vector'("10");
-            pc_sel_register(2 downto 0) <= std_logic_vector'("000");
+            internal_m_data_register(1 downto 0) <= store_data(5 downto 4);
+            internal_addr_register(1 downto 0) <= reversed_result_bus(5 downto 4);
          ELSIF ((pres_state=309)) THEN 
-            next_state<=0;
-            execution_enable_register(0 downto 0) <= std_logic_vector'("0");
-            need_writeback_register(0 downto 0) <= std_logic_vector'("0");
-            com_enable_register(0 downto 0) <= std_logic_vector'("0");
-            go_register(1 downto 0) <= std_logic_vector'("00");
-            pc_sel_register(2 downto 0) <= std_logic_vector'("001");
-         ELSIF ((pres_state=300) AND
-                (s_data(1 DOWNTO 1)=std_logic_vector'("1"))) THEN 
-            next_state<=310;
+            next_state<=pres_state_plus_1;
+            internal_m_data_register(1 downto 0) <= store_data(3 downto 2);
+            internal_addr_register(1 downto 0) <= reversed_result_bus(3 downto 2);
          ELSIF ((pres_state=310)) THEN 
             next_state<=pres_state_plus_1;
+            internal_m_data_register(1 downto 0) <= store_data(1 downto 0);
+            internal_addr_register(1 downto 0) <= reversed_result_bus(1 downto 0);
+            transmitting_register(0 downto 0) <= std_logic_vector'("0");
          ELSIF ((pres_state=311)) THEN 
             next_state<=pres_state_plus_1;
-            rs1_data_register(4 downto 0) <= s_data(0) & s_data(1) &
-                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
-                  FIFO_s_data(2)(0);
-            alu_ctrl_register(2 downto 0) <= std_logic_vector'("111");
-            result_select_register(2 downto 0) <= std_logic_vector'("001");
+            internal_addr_register(1 downto 0) <= parity_addr(1 downto 0);
+            internal_m_data_register(1 downto 0) <= parity_data(1 downto 0);
          ELSIF ((pres_state=312)) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=313)) THEN 
+         ELSIF ((pres_state=313) AND
+                (s_active(0 DOWNTO 0)=std_logic_vector'("1"))) THEN 
             next_state<=pres_state_plus_1;
+            m_active_register(0 downto 0) <= std_logic_vector'("0");
+            reset_parity_register(0 downto 0) <= std_logic_vector'("1");
+            com_enable_register(0 downto 0) <= std_logic_vector'("0");
+            pc_sel_register(2 downto 0) <= std_logic_vector'("000");
          ELSIF ((pres_state=314)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=315)) THEN 
+            next_state<=0;
+            pc_sel_register(2 downto 0) <= std_logic_vector'("001");
+         ELSIF ((pres_state=313) AND
+                (s_active(0 DOWNTO 0)=std_logic_vector'("0"))) THEN 
+            next_state<=1;
+              next_state <= 0;  
+             m_active_register(0 downto 0) <= std_logic_vector'("0");
+            reset_parity_register(0 downto 0) <= std_logic_vector'("1");
+            com_enable_register(0 downto 0) <= std_logic_vector'("0");
+            com_enable_register(0 downto 0) <= std_logic_vector'("0");
+         ELSIF ((pres_state=250) AND
+                (s_data(1 DOWNTO 0)=std_logic_vector'("01"))) THEN 
+            next_state<=315;
+         ELSIF ((pres_state=315) AND
+                (s_data(1 DOWNTO 1)=std_logic_vector'("0"))) THEN 
             next_state<=pres_state_plus_1;
          ELSIF ((pres_state=316)) THEN 
             next_state<=pres_state_plus_1;
          ELSIF ((pres_state=317)) THEN 
             next_state<=pres_state_plus_1;
-            op2_alt_register(31 downto 0) <= std_logic_vector'("00000000000000000000") &
-                  s_data(0) & s_data(1) &
-                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
-                  FIFO_s_data(2)(0) & FIFO_s_data(2)(1) &
-                  FIFO_s_data(3)(0) & FIFO_s_data(3)(1) &
-                  FIFO_s_data(4)(0) & FIFO_s_data(4)(1) &
-                  FIFO_s_data(5)(0) & FIFO_s_data(5)(1);
-            alu_funct_register(0 downto 0) <= std_logic_vector'("0");
-            execution_type_register(0 downto 0) <= std_logic_vector'("1");
-            execution_enable_register(0 downto 0) <= std_logic_vector'("1");
-            need_writeback_register(0 downto 0) <= std_logic_vector'("1");
-            go_register(1 downto 0) <= std_logic_vector'("10");
-            pc_sel_register(2 downto 0) <= std_logic_vector'("000");
-         ELSIF ((pres_state=318)) THEN 
-            next_state<=0;
-            execution_enable_register(0 downto 0) <= std_logic_vector'("0");
-            need_writeback_register(0 downto 0) <= std_logic_vector'("0");
-            com_enable_register(0 downto 0) <= std_logic_vector'("0");
-            go_register(1 downto 0) <= std_logic_vector'("00");
-            pc_sel_register(2 downto 0) <= std_logic_vector'("001");
-         ELSIF ((pres_state=261) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("10"))) THEN 
-            next_state<=319;
-         ELSIF ((pres_state=319) AND
-                (s_data(1 DOWNTO 1)=std_logic_vector'("0"))) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=320)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=321)) THEN 
-            next_state<=pres_state_plus_1;
             rs1_data_register(4 downto 0) <= s_data(0) & s_data(1) &
                   FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
                   FIFO_s_data(2)(0);
+            alu_ctrl_register(2 downto 0) <= std_logic_vector'("000");
+            alu_funct_register(0 downto 0) <= std_logic_vector'("0");
             result_select_register(2 downto 0) <= std_logic_vector'("001");
-            alu_ctrl_register(2 downto 0) <= std_logic_vector'("001");
+         ELSIF ((pres_state=318)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=319)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=320)) THEN 
+            next_state<=pres_state_plus_1;
+            rs2_data_register(4 downto 0) <= s_data(1 downto 1) &
+                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
+                  FIFO_s_data(2)(0) & FIFO_s_data(2)(1);
+         ELSIF ((pres_state=321)) THEN 
+            next_state<=pres_state_plus_1;
          ELSIF ((pres_state=322)) THEN 
             next_state<=pres_state_plus_1;
          ELSIF ((pres_state=323)) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=324) AND
-                (s_data(0 DOWNTO 0)=std_logic_vector'("0"))) THEN 
-            next_state<=pres_state_plus_1;
-            shift_imm_register(4 downto 0) <= s_data(1 downto 1) &
+            imm7_data_register(6 downto 0) <= s_data(0) & s_data(1) &
                   FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
-                  FIFO_s_data(2)(0) & FIFO_s_data(2)(1);
-         ELSIF ((pres_state=325) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
+                  FIFO_s_data(2)(0) & FIFO_s_data(2)(1) &
+                  FIFO_s_data(3)(0);
+         ELSIF ((pres_state=324)) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=326) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=327) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
-            next_state<=pres_state_plus_1;
-            alu_funct_register(0 downto 0) <= std_logic_vector'("0");
+            op2_alt_register(31 downto 0) <= S_immediate(31 downto 0);
             execution_type_register(0 downto 0) <= std_logic_vector'("1");
             execution_enable_register(0 downto 0) <= std_logic_vector'("1");
-            need_writeback_register(0 downto 0) <= std_logic_vector'("1");
-            go_register(1 downto 0) <= std_logic_vector'("10");
-            pc_sel_register(2 downto 0) <= std_logic_vector'("000");
-         ELSIF ((pres_state=328)) THEN 
-            next_state<=0;
+         ELSIF ((pres_state=325)) THEN 
+            next_state<=pres_state_plus_1;
             execution_enable_register(0 downto 0) <= std_logic_vector'("0");
-            need_writeback_register(0 downto 0) <= std_logic_vector'("0");
             com_enable_register(0 downto 0) <= std_logic_vector'("0");
-            go_register(1 downto 0) <= std_logic_vector'("00");
-            pc_sel_register(2 downto 0) <= std_logic_vector'("001");
-         ELSIF ((pres_state=319) AND
-                (s_data(1 DOWNTO 1)=std_logic_vector'("1"))) THEN 
-            next_state<=329;
+         ELSIF ((pres_state=326)) THEN 
+            next_state<=pres_state_plus_1;
+            reset_parity_register(0 downto 0) <= std_logic_vector'("0");
+            com_enable_register(0 downto 0) <= std_logic_vector'("1");
+            m_active_register(0 downto 0) <= std_logic_vector'("1");
+            internal_addr_register(1 downto 0) <= std_logic_vector'("00");
+            store_enable_register(0 downto 0) <= std_logic_vector'("1");
+         ELSIF ((pres_state=327)) THEN 
+            next_state<=pres_state_plus_1;
+            transmitting_register(0 downto 0) <= std_logic_vector'("1");
+            store_enable_register(0 downto 0) <= std_logic_vector'("0");
+            internal_m_data_register(1 downto 0) <= store_data(31 downto 30);
+            internal_addr_register(1 downto 0) <= reversed_result_bus(31 downto 30);
+         ELSIF ((pres_state=328)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_m_data_register(1 downto 0) <= store_data(29 downto 28);
+            internal_addr_register(1 downto 0) <= reversed_result_bus(29 downto 28);
          ELSIF ((pres_state=329)) THEN 
             next_state<=pres_state_plus_1;
+            internal_m_data_register(1 downto 0) <= store_data(27 downto 26);
+            internal_addr_register(1 downto 0) <= reversed_result_bus(27 downto 26);
          ELSIF ((pres_state=330)) THEN 
             next_state<=pres_state_plus_1;
-            rs1_data_register(4 downto 0) <= s_data(0) & s_data(1) &
-                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
-                  FIFO_s_data(2)(0);
-            result_select_register(2 downto 0) <= std_logic_vector'("001");
-            alu_ctrl_register(2 downto 0) <= std_logic_vector'("101");
+            internal_m_data_register(1 downto 0) <= store_data(25 downto 24);
+            internal_addr_register(1 downto 0) <= reversed_result_bus(25 downto 24);
          ELSIF ((pres_state=331)) THEN 
             next_state<=pres_state_plus_1;
+            internal_m_data_register(1 downto 0) <= store_data(23 downto 22);
+            internal_addr_register(1 downto 0) <= reversed_result_bus(23 downto 22);
          ELSIF ((pres_state=332)) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=333) AND
-                (s_data(0 DOWNTO 0)=std_logic_vector'("0"))) THEN 
+            internal_m_data_register(1 downto 0) <= store_data(21 downto 20);
+            internal_addr_register(1 downto 0) <= reversed_result_bus(21 downto 20);
+         ELSIF ((pres_state=333)) THEN 
             next_state<=pres_state_plus_1;
-            shift_imm_register(4 downto 0) <= s_data(1 downto 1) &
-                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
-                  FIFO_s_data(2)(0) & FIFO_s_data(2)(1);
-         ELSIF ((pres_state=334) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
+            internal_m_data_register(1 downto 0) <= store_data(19 downto 18);
+            internal_addr_register(1 downto 0) <= reversed_result_bus(19 downto 18);
+         ELSIF ((pres_state=334)) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=335) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
+            internal_m_data_register(1 downto 0) <= store_data(17 downto 16);
+            internal_addr_register(1 downto 0) <= reversed_result_bus(17 downto 16);
+         ELSIF ((pres_state=335)) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=336) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
+            internal_m_data_register(1 downto 0) <= store_data(15 downto 14);
+            internal_addr_register(1 downto 0) <= reversed_result_bus(15 downto 14);
+         ELSIF ((pres_state=336)) THEN 
             next_state<=pres_state_plus_1;
-            alu_funct_register(0 downto 0) <= std_logic_vector'("0");
-            execution_type_register(0 downto 0) <= std_logic_vector'("1");
-            execution_enable_register(0 downto 0) <= std_logic_vector'("1");
-            need_writeback_register(0 downto 0) <= std_logic_vector'("1");
-            go_register(1 downto 0) <= std_logic_vector'("10");
-            pc_sel_register(2 downto 0) <= std_logic_vector'("000");
+            internal_m_data_register(1 downto 0) <= store_data(13 downto 12);
+            internal_addr_register(1 downto 0) <= reversed_result_bus(13 downto 12);
          ELSIF ((pres_state=337)) THEN 
-            next_state<=0;
-            execution_enable_register(0 downto 0) <= std_logic_vector'("0");
-            need_writeback_register(0 downto 0) <= std_logic_vector'("0");
-            com_enable_register(0 downto 0) <= std_logic_vector'("0");
-            go_register(1 downto 0) <= std_logic_vector'("00");
-            pc_sel_register(2 downto 0) <= std_logic_vector'("001");
-         ELSIF ((pres_state=336) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("10"))) THEN 
-            next_state<=338;
-            alu_funct_register(0 downto 0) <= std_logic_vector'("1");
-            execution_type_register(0 downto 0) <= std_logic_vector'("1");
-            execution_enable_register(0 downto 0) <= std_logic_vector'("1");
-            need_writeback_register(0 downto 0) <= std_logic_vector'("1");
-            go_register(1 downto 0) <= std_logic_vector'("10");
-            pc_sel_register(2 downto 0) <= std_logic_vector'("000");
-         ELSIF ((pres_state=338)) THEN 
-            next_state<=0;
-            execution_enable_register(0 downto 0) <= std_logic_vector'("0");
-            need_writeback_register(0 downto 0) <= std_logic_vector'("0");
-            com_enable_register(0 downto 0) <= std_logic_vector'("0");
-            go_register(1 downto 0) <= std_logic_vector'("00");
-            pc_sel_register(2 downto 0) <= std_logic_vector'("001");
-         ELSIF ((pres_state=104) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("01"))) THEN 
-            next_state<=339;
-         ELSIF ((pres_state=339) AND
-                (s_data(1 DOWNTO 1)=std_logic_vector'("0"))) THEN 
             next_state<=pres_state_plus_1;
+            internal_m_data_register(1 downto 0) <= store_data(11 downto 10);
+            internal_addr_register(1 downto 0) <= reversed_result_bus(11 downto 10);
+         ELSIF ((pres_state=338)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_m_data_register(1 downto 0) <= store_data(9 downto 8);
+            internal_addr_register(1 downto 0) <= reversed_result_bus(9 downto 8);
+         ELSIF ((pres_state=339)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_m_data_register(1 downto 0) <= store_data(7 downto 6);
+            internal_addr_register(1 downto 0) <= reversed_result_bus(7 downto 6);
          ELSIF ((pres_state=340)) THEN 
             next_state<=pres_state_plus_1;
+            internal_m_data_register(1 downto 0) <= store_data(5 downto 4);
+            internal_addr_register(1 downto 0) <= reversed_result_bus(5 downto 4);
          ELSIF ((pres_state=341)) THEN 
             next_state<=pres_state_plus_1;
-            imm5_data_register(4 downto 0) <= s_data(0) & s_data(1) &
-                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
-                  FIFO_s_data(2)(0);
-            rs_sel_register(1 downto 0) <= std_logic_vector'("10");
-         ELSIF ((pres_state=342) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
+            internal_m_data_register(1 downto 0) <= store_data(3 downto 2);
+            internal_addr_register(1 downto 0) <= reversed_result_bus(3 downto 2);
+         ELSIF ((pres_state=342)) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=343) AND
-                (s_data(1 DOWNTO 1)=std_logic_vector'("0"))) THEN 
+            internal_m_data_register(1 downto 0) <= store_data(1 downto 0);
+            internal_addr_register(1 downto 0) <= reversed_result_bus(1 downto 0);
+            transmitting_register(0 downto 0) <= std_logic_vector'("0");
+         ELSIF ((pres_state=343)) THEN 
             next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= parity_addr(1 downto 0);
+            internal_m_data_register(1 downto 0) <= parity_data(1 downto 0);
          ELSIF ((pres_state=344)) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=345)) THEN 
+         ELSIF ((pres_state=345) AND
+                (s_active(0 DOWNTO 0)=std_logic_vector'("1"))) THEN 
             next_state<=pres_state_plus_1;
-            rs1_data_register(4 downto 0) <= s_data(0) & s_data(1) &
-                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
-                  FIFO_s_data(2)(0);
-            alu_ctrl_register(2 downto 0) <= std_logic_vector'("000");
-            alu_funct_register(0 downto 0) <= std_logic_vector'("0");
-            result_select_register(2 downto 0) <= std_logic_vector'("001");
+            m_active_register(0 downto 0) <= std_logic_vector'("0");
+            reset_parity_register(0 downto 0) <= std_logic_vector'("1");
+            com_enable_register(0 downto 0) <= std_logic_vector'("0");
+            pc_sel_register(2 downto 0) <= std_logic_vector'("000");
          ELSIF ((pres_state=346)) THEN 
-            next_state<=pres_state_plus_1;
+            next_state<=0;
+            pc_sel_register(2 downto 0) <= std_logic_vector'("001");
+         ELSIF ((pres_state=345) AND
+                (s_active(0 DOWNTO 0)=std_logic_vector'("0"))) THEN 
+            next_state<=1;
+              next_state <= 0;  
+             m_active_register(0 downto 0) <= std_logic_vector'("0");
+            reset_parity_register(0 downto 0) <= std_logic_vector'("1");
+            com_enable_register(0 downto 0) <= std_logic_vector'("0");
+            com_enable_register(0 downto 0) <= std_logic_vector'("0");
+         ELSIF ((pres_state=247) AND
+                (s_data(1 DOWNTO 1)=std_logic_vector'("1"))) THEN 
+            next_state<=347;
          ELSIF ((pres_state=347)) THEN 
             next_state<=pres_state_plus_1;
          ELSIF ((pres_state=348)) THEN 
-            next_state<=pres_state_plus_1;
-            rs2_data_register(4 downto 0) <= s_data(1 downto 1) &
-                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
-                  FIFO_s_data(2)(0) & FIFO_s_data(2)(1);
-         ELSIF ((pres_state=349)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=350)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=351)) THEN 
-            next_state<=pres_state_plus_1;
-            imm7_data_register(6 downto 0) <= s_data(0) & s_data(1) &
-                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
-                  FIFO_s_data(2)(0) & FIFO_s_data(2)(1) &
-                  FIFO_s_data(3)(0);
-            op2_alt_register(31 downto 0) <= S_immediate(31 downto 0);
-            execution_type_register(0 downto 0) <= std_logic_vector'("1");
-            execution_enable_register(0 downto 0) <= std_logic_vector'("1");
-         ELSIF ((pres_state=352)) THEN 
-            next_state<=pres_state_plus_1;
-            execution_enable_register(0 downto 0) <= std_logic_vector'("0");
-            com_enable_register(0 downto 0) <= std_logic_vector'("0");
-         ELSIF ((pres_state=353)) THEN 
-            next_state<=pres_state_plus_1;
-            com_enable_register(0 downto 0) <= std_logic_vector'("1");
-            m_active_register(0 downto 0) <= std_logic_vector'("1");
-            internal_addr_register(1 downto 0) <= std_logic_vector'("00");
-         ELSIF ((pres_state=354)) THEN 
-            next_state<=pres_state_plus_1;
-            transmitting_register(0 downto 0) <= std_logic_vector'("1");
-            internal_m_data_register(1 downto 0) <= store_data(31 downto 30);
-            internal_addr_register(1 downto 0) <= reversed_result_bus(31 downto 30);
-         ELSIF ((pres_state=355)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_m_data_register(1 downto 0) <= store_data(29 downto 28);
-            internal_addr_register(1 downto 0) <= reversed_result_bus(29 downto 28);
-         ELSIF ((pres_state=356)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_m_data_register(1 downto 0) <= store_data(27 downto 26);
-            internal_addr_register(1 downto 0) <= reversed_result_bus(27 downto 26);
-         ELSIF ((pres_state=357)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_m_data_register(1 downto 0) <= store_data(25 downto 24);
-            internal_addr_register(1 downto 0) <= reversed_result_bus(25 downto 24);
-         ELSIF ((pres_state=358)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_m_data_register(1 downto 0) <= store_data(23 downto 22);
-            internal_addr_register(1 downto 0) <= reversed_result_bus(23 downto 22);
-         ELSIF ((pres_state=359)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_m_data_register(1 downto 0) <= store_data(21 downto 20);
-            internal_addr_register(1 downto 0) <= reversed_result_bus(21 downto 20);
-         ELSIF ((pres_state=360)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_m_data_register(1 downto 0) <= store_data(19 downto 18);
-            internal_addr_register(1 downto 0) <= reversed_result_bus(19 downto 18);
-         ELSIF ((pres_state=361)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_m_data_register(1 downto 0) <= store_data(17 downto 16);
-            internal_addr_register(1 downto 0) <= reversed_result_bus(17 downto 16);
-         ELSIF ((pres_state=362)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_m_data_register(1 downto 0) <= store_data(15 downto 14);
-            internal_addr_register(1 downto 0) <= reversed_result_bus(15 downto 14);
-         ELSIF ((pres_state=363)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_m_data_register(1 downto 0) <= store_data(13 downto 12);
-            internal_addr_register(1 downto 0) <= reversed_result_bus(13 downto 12);
-         ELSIF ((pres_state=364)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_m_data_register(1 downto 0) <= store_data(11 downto 10);
-            internal_addr_register(1 downto 0) <= reversed_result_bus(11 downto 10);
-         ELSIF ((pres_state=365)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_m_data_register(1 downto 0) <= store_data(9 downto 8);
-            internal_addr_register(1 downto 0) <= reversed_result_bus(9 downto 8);
-         ELSIF ((pres_state=366)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_m_data_register(1 downto 0) <= store_data(7 downto 6);
-            internal_addr_register(1 downto 0) <= reversed_result_bus(7 downto 6);
-         ELSIF ((pres_state=367)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_m_data_register(1 downto 0) <= store_data(5 downto 4);
-            internal_addr_register(1 downto 0) <= reversed_result_bus(5 downto 4);
-         ELSIF ((pres_state=368)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_m_data_register(1 downto 0) <= store_data(3 downto 2);
-            internal_addr_register(1 downto 0) <= reversed_result_bus(3 downto 2);
-         ELSIF ((pres_state=369)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_m_data_register(1 downto 0) <= store_data(1 downto 0);
-            internal_addr_register(1 downto 0) <= reversed_result_bus(1 downto 0);
-            transmitting_register(0 downto 0) <= std_logic_vector'("0");
-         ELSIF ((pres_state=370)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= parity_addr(1 downto 0);
-            internal_m_data_register(1 downto 0) <= parity_data(1 downto 0);
-            go_register(1 downto 0) <= std_logic_vector'("10");
-            pc_sel_register(2 downto 0) <= std_logic_vector'("000");
-         ELSIF ((pres_state=371) AND
-                (s_active(0 DOWNTO 0)=std_logic_vector'("1"))) THEN 
-            next_state<=0;
-            m_active_register(0 downto 0) <= std_logic_vector'("0");
-            reset_parity_register(0 downto 0) <= std_logic_vector'("1");
-            com_enable_register(0 downto 0) <= std_logic_vector'("0");
-            go_register(1 downto 0) <= std_logic_vector'("00");
-            pc_sel_register(2 downto 0) <= std_logic_vector'("001");
-         ELSIF ((pres_state=371) AND
-                (s_active(0 DOWNTO 0)=std_logic_vector'("0"))) THEN 
-            next_state<=0;
-              next_state <= 0;  
-             m_active_register(0 downto 0) <= std_logic_vector'("0");
-            reset_parity_register(0 downto 0) <= std_logic_vector'("1");
-            com_enable_register(0 downto 0) <= std_logic_vector'("0");
-            com_enable_register(0 downto 0) <= std_logic_vector'("0");
-            go_register(1 downto 0) <= std_logic_vector'("00");
-            pc_sel_register(2 downto 0) <= std_logic_vector'("001");
-         ELSIF ((pres_state=342) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("10"))) THEN 
-            next_state<=372;
-         ELSIF ((pres_state=372) AND
-                (s_data(1 DOWNTO 1)=std_logic_vector'("0"))) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=373)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=374)) THEN 
-            next_state<=pres_state_plus_1;
-            rs1_data_register(4 downto 0) <= s_data(0) & s_data(1) &
-                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
-                  FIFO_s_data(2)(0);
-            alu_ctrl_register(2 downto 0) <= std_logic_vector'("000");
-            alu_funct_register(0 downto 0) <= std_logic_vector'("0");
-            result_select_register(2 downto 0) <= std_logic_vector'("001");
-         ELSIF ((pres_state=375)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=376)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=377)) THEN 
-            next_state<=pres_state_plus_1;
-            rs2_data_register(4 downto 0) <= s_data(1 downto 1) &
-                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
-                  FIFO_s_data(2)(0) & FIFO_s_data(2)(1);
-         ELSIF ((pres_state=378)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=379)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=380)) THEN 
-            next_state<=pres_state_plus_1;
-            imm7_data_register(6 downto 0) <= s_data(0) & s_data(1) &
-                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
-                  FIFO_s_data(2)(0) & FIFO_s_data(2)(1) &
-                  FIFO_s_data(3)(0);
-            op2_alt_register(31 downto 0) <= S_immediate(31 downto 0);
-            execution_type_register(0 downto 0) <= std_logic_vector'("1");
-            execution_enable_register(0 downto 0) <= std_logic_vector'("1");
-         ELSIF ((pres_state=381)) THEN 
-            next_state<=pres_state_plus_1;
-            execution_enable_register(0 downto 0) <= std_logic_vector'("0");
-            com_enable_register(0 downto 0) <= std_logic_vector'("0");
-         ELSIF ((pres_state=382)) THEN 
-            next_state<=pres_state_plus_1;
-            com_enable_register(0 downto 0) <= std_logic_vector'("1");
-            m_active_register(0 downto 0) <= std_logic_vector'("1");
-            internal_addr_register(1 downto 0) <= std_logic_vector'("00");
-         ELSIF ((pres_state=383)) THEN 
-            next_state<=pres_state_plus_1;
-            transmitting_register(0 downto 0) <= std_logic_vector'("1");
-            internal_m_data_register(1 downto 0) <= store_data(31 downto 30);
-            internal_addr_register(1 downto 0) <= reversed_result_bus(31 downto 30);
-         ELSIF ((pres_state=384)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_m_data_register(1 downto 0) <= store_data(29 downto 28);
-            internal_addr_register(1 downto 0) <= reversed_result_bus(29 downto 28);
-         ELSIF ((pres_state=385)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_m_data_register(1 downto 0) <= store_data(27 downto 26);
-            internal_addr_register(1 downto 0) <= reversed_result_bus(27 downto 26);
-         ELSIF ((pres_state=386)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_m_data_register(1 downto 0) <= store_data(25 downto 24);
-            internal_addr_register(1 downto 0) <= reversed_result_bus(25 downto 24);
-         ELSIF ((pres_state=387)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_m_data_register(1 downto 0) <= store_data(23 downto 22);
-            internal_addr_register(1 downto 0) <= reversed_result_bus(23 downto 22);
-         ELSIF ((pres_state=388)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_m_data_register(1 downto 0) <= store_data(21 downto 20);
-            internal_addr_register(1 downto 0) <= reversed_result_bus(21 downto 20);
-         ELSIF ((pres_state=389)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_m_data_register(1 downto 0) <= store_data(19 downto 18);
-            internal_addr_register(1 downto 0) <= reversed_result_bus(19 downto 18);
-         ELSIF ((pres_state=390)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_m_data_register(1 downto 0) <= store_data(17 downto 16);
-            internal_addr_register(1 downto 0) <= reversed_result_bus(17 downto 16);
-         ELSIF ((pres_state=391)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_m_data_register(1 downto 0) <= store_data(15 downto 14);
-            internal_addr_register(1 downto 0) <= reversed_result_bus(15 downto 14);
-         ELSIF ((pres_state=392)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_m_data_register(1 downto 0) <= store_data(13 downto 12);
-            internal_addr_register(1 downto 0) <= reversed_result_bus(13 downto 12);
-         ELSIF ((pres_state=393)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_m_data_register(1 downto 0) <= store_data(11 downto 10);
-            internal_addr_register(1 downto 0) <= reversed_result_bus(11 downto 10);
-         ELSIF ((pres_state=394)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_m_data_register(1 downto 0) <= store_data(9 downto 8);
-            internal_addr_register(1 downto 0) <= reversed_result_bus(9 downto 8);
-         ELSIF ((pres_state=395)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_m_data_register(1 downto 0) <= store_data(7 downto 6);
-            internal_addr_register(1 downto 0) <= reversed_result_bus(7 downto 6);
-         ELSIF ((pres_state=396)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_m_data_register(1 downto 0) <= store_data(5 downto 4);
-            internal_addr_register(1 downto 0) <= reversed_result_bus(5 downto 4);
-         ELSIF ((pres_state=397)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_m_data_register(1 downto 0) <= store_data(3 downto 2);
-            internal_addr_register(1 downto 0) <= reversed_result_bus(3 downto 2);
-         ELSIF ((pres_state=398)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_m_data_register(1 downto 0) <= store_data(1 downto 0);
-            internal_addr_register(1 downto 0) <= reversed_result_bus(1 downto 0);
-            transmitting_register(0 downto 0) <= std_logic_vector'("0");
-         ELSIF ((pres_state=399)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= parity_addr(1 downto 0);
-            internal_m_data_register(1 downto 0) <= parity_data(1 downto 0);
-            go_register(1 downto 0) <= std_logic_vector'("10");
-            pc_sel_register(2 downto 0) <= std_logic_vector'("000");
-         ELSIF ((pres_state=400) AND
-                (s_active(0 DOWNTO 0)=std_logic_vector'("1"))) THEN 
-            next_state<=0;
-            m_active_register(0 downto 0) <= std_logic_vector'("0");
-            reset_parity_register(0 downto 0) <= std_logic_vector'("1");
-            com_enable_register(0 downto 0) <= std_logic_vector'("0");
-            go_register(1 downto 0) <= std_logic_vector'("00");
-            pc_sel_register(2 downto 0) <= std_logic_vector'("001");
-         ELSIF ((pres_state=400) AND
-                (s_active(0 DOWNTO 0)=std_logic_vector'("0"))) THEN 
-            next_state<=0;
-              next_state <= 0;  
-             m_active_register(0 downto 0) <= std_logic_vector'("0");
-            reset_parity_register(0 downto 0) <= std_logic_vector'("1");
-            com_enable_register(0 downto 0) <= std_logic_vector'("0");
-            com_enable_register(0 downto 0) <= std_logic_vector'("0");
-            go_register(1 downto 0) <= std_logic_vector'("00");
-            pc_sel_register(2 downto 0) <= std_logic_vector'("001");
-         ELSIF ((pres_state=342) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("01"))) THEN 
-            next_state<=401;
-         ELSIF ((pres_state=401) AND
-                (s_data(1 DOWNTO 1)=std_logic_vector'("0"))) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=402)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=403)) THEN 
-            next_state<=pres_state_plus_1;
-            rs1_data_register(4 downto 0) <= s_data(0) & s_data(1) &
-                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
-                  FIFO_s_data(2)(0);
-            alu_ctrl_register(2 downto 0) <= std_logic_vector'("000");
-            alu_funct_register(0 downto 0) <= std_logic_vector'("0");
-            result_select_register(2 downto 0) <= std_logic_vector'("001");
-         ELSIF ((pres_state=404)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=405)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=406)) THEN 
-            next_state<=pres_state_plus_1;
-            rs2_data_register(4 downto 0) <= s_data(1 downto 1) &
-                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
-                  FIFO_s_data(2)(0) & FIFO_s_data(2)(1);
-         ELSIF ((pres_state=407)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=408)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=409)) THEN 
-            next_state<=pres_state_plus_1;
-            imm7_data_register(6 downto 0) <= s_data(0) & s_data(1) &
-                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
-                  FIFO_s_data(2)(0) & FIFO_s_data(2)(1) &
-                  FIFO_s_data(3)(0);
-            op2_alt_register(31 downto 0) <= S_immediate(31 downto 0);
-            execution_type_register(0 downto 0) <= std_logic_vector'("1");
-            execution_enable_register(0 downto 0) <= std_logic_vector'("1");
-         ELSIF ((pres_state=410)) THEN 
-            next_state<=pres_state_plus_1;
-            execution_enable_register(0 downto 0) <= std_logic_vector'("0");
-            com_enable_register(0 downto 0) <= std_logic_vector'("0");
-         ELSIF ((pres_state=411)) THEN 
-            next_state<=pres_state_plus_1;
-            com_enable_register(0 downto 0) <= std_logic_vector'("1");
-            m_active_register(0 downto 0) <= std_logic_vector'("1");
-            internal_addr_register(1 downto 0) <= std_logic_vector'("00");
-         ELSIF ((pres_state=412)) THEN 
-            next_state<=pres_state_plus_1;
-            transmitting_register(0 downto 0) <= std_logic_vector'("1");
-            internal_m_data_register(1 downto 0) <= store_data(31 downto 30);
-            internal_addr_register(1 downto 0) <= reversed_result_bus(31 downto 30);
-         ELSIF ((pres_state=413)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_m_data_register(1 downto 0) <= store_data(29 downto 28);
-            internal_addr_register(1 downto 0) <= reversed_result_bus(29 downto 28);
-         ELSIF ((pres_state=414)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_m_data_register(1 downto 0) <= store_data(27 downto 26);
-            internal_addr_register(1 downto 0) <= reversed_result_bus(27 downto 26);
-         ELSIF ((pres_state=415)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_m_data_register(1 downto 0) <= store_data(25 downto 24);
-            internal_addr_register(1 downto 0) <= reversed_result_bus(25 downto 24);
-         ELSIF ((pres_state=416)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_m_data_register(1 downto 0) <= store_data(23 downto 22);
-            internal_addr_register(1 downto 0) <= reversed_result_bus(23 downto 22);
-         ELSIF ((pres_state=417)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_m_data_register(1 downto 0) <= store_data(21 downto 20);
-            internal_addr_register(1 downto 0) <= reversed_result_bus(21 downto 20);
-         ELSIF ((pres_state=418)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_m_data_register(1 downto 0) <= store_data(19 downto 18);
-            internal_addr_register(1 downto 0) <= reversed_result_bus(19 downto 18);
-         ELSIF ((pres_state=419)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_m_data_register(1 downto 0) <= store_data(17 downto 16);
-            internal_addr_register(1 downto 0) <= reversed_result_bus(17 downto 16);
-         ELSIF ((pres_state=420)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_m_data_register(1 downto 0) <= store_data(15 downto 14);
-            internal_addr_register(1 downto 0) <= reversed_result_bus(15 downto 14);
-         ELSIF ((pres_state=421)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_m_data_register(1 downto 0) <= store_data(13 downto 12);
-            internal_addr_register(1 downto 0) <= reversed_result_bus(13 downto 12);
-         ELSIF ((pres_state=422)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_m_data_register(1 downto 0) <= store_data(11 downto 10);
-            internal_addr_register(1 downto 0) <= reversed_result_bus(11 downto 10);
-         ELSIF ((pres_state=423)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_m_data_register(1 downto 0) <= store_data(9 downto 8);
-            internal_addr_register(1 downto 0) <= reversed_result_bus(9 downto 8);
-         ELSIF ((pres_state=424)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_m_data_register(1 downto 0) <= store_data(7 downto 6);
-            internal_addr_register(1 downto 0) <= reversed_result_bus(7 downto 6);
-         ELSIF ((pres_state=425)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_m_data_register(1 downto 0) <= store_data(5 downto 4);
-            internal_addr_register(1 downto 0) <= reversed_result_bus(5 downto 4);
-         ELSIF ((pres_state=426)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_m_data_register(1 downto 0) <= store_data(3 downto 2);
-            internal_addr_register(1 downto 0) <= reversed_result_bus(3 downto 2);
-         ELSIF ((pres_state=427)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_m_data_register(1 downto 0) <= store_data(1 downto 0);
-            internal_addr_register(1 downto 0) <= reversed_result_bus(1 downto 0);
-            transmitting_register(0 downto 0) <= std_logic_vector'("0");
-         ELSIF ((pres_state=428)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= parity_addr(1 downto 0);
-            internal_m_data_register(1 downto 0) <= parity_data(1 downto 0);
-            go_register(1 downto 0) <= std_logic_vector'("10");
-            pc_sel_register(2 downto 0) <= std_logic_vector'("000");
-         ELSIF ((pres_state=429) AND
-                (s_active(0 DOWNTO 0)=std_logic_vector'("1"))) THEN 
-            next_state<=0;
-            m_active_register(0 downto 0) <= std_logic_vector'("0");
-            reset_parity_register(0 downto 0) <= std_logic_vector'("1");
-            com_enable_register(0 downto 0) <= std_logic_vector'("0");
-            go_register(1 downto 0) <= std_logic_vector'("00");
-            pc_sel_register(2 downto 0) <= std_logic_vector'("001");
-         ELSIF ((pres_state=429) AND
-                (s_active(0 DOWNTO 0)=std_logic_vector'("0"))) THEN 
-            next_state<=0;
-              next_state <= 0;  
-             m_active_register(0 downto 0) <= std_logic_vector'("0");
-            reset_parity_register(0 downto 0) <= std_logic_vector'("1");
-            com_enable_register(0 downto 0) <= std_logic_vector'("0");
-            com_enable_register(0 downto 0) <= std_logic_vector'("0");
-            go_register(1 downto 0) <= std_logic_vector'("00");
-            pc_sel_register(2 downto 0) <= std_logic_vector'("001");
-         ELSIF ((pres_state=339) AND
-                (s_data(1 DOWNTO 1)=std_logic_vector'("1"))) THEN 
-            next_state<=430;
-         ELSIF ((pres_state=430)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=431)) THEN 
             next_state<=pres_state_plus_1;
             imm5_data_register(4 downto 0) <= s_data(0) & s_data(1) &
                   FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
                   FIFO_s_data(2)(0);
             rs_sel_register(1 downto 0) <= std_logic_vector'("00");
-         ELSIF ((pres_state=432) AND
+         ELSIF ((pres_state=349) AND
                 (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=433) AND
+         ELSIF ((pres_state=350) AND
                 (s_data(1 DOWNTO 1)=std_logic_vector'("0"))) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=434)) THEN 
+         ELSIF ((pres_state=351)) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=435)) THEN 
+         ELSIF ((pres_state=352)) THEN 
             next_state<=pres_state_plus_1;
             rs1_data_register(4 downto 0) <= s_data(0) & s_data(1) &
                   FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
                   FIFO_s_data(2)(0);
             result_select_register(2 downto 0) <= std_logic_vector'("111");
             branch_funct_register(2 downto 0) <= std_logic_vector'("000");
-         ELSIF ((pres_state=436)) THEN 
+         ELSIF ((pres_state=353)) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=437)) THEN 
+         ELSIF ((pres_state=354)) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=438)) THEN 
+         ELSIF ((pres_state=355)) THEN 
             next_state<=pres_state_plus_1;
             rs2_data_register(4 downto 0) <= s_data(1 downto 1) &
                   FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
                   FIFO_s_data(2)(0) & FIFO_s_data(2)(1);
-         ELSIF ((pres_state=439)) THEN 
+         ELSIF ((pres_state=356)) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=440)) THEN 
+         ELSIF ((pres_state=357)) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=441)) THEN 
+         ELSIF ((pres_state=358)) THEN 
             next_state<=pres_state_plus_1;
             imm7_data_register(6 downto 0) <= s_data(0) & s_data(1) &
                   FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
                   FIFO_s_data(2)(0) & FIFO_s_data(2)(1) &
                   FIFO_s_data(3)(0);
-            branch_bus_register(31 downto 0) <= branch_immediate(31 downto 0);
             execution_type_register(0 downto 0) <= std_logic_vector'("0");
             execution_enable_register(0 downto 0) <= std_logic_vector'("1");
-            go_register(1 downto 0) <= std_logic_vector'("10");
             pc_sel_register(2 downto 0) <= std_logic_vector'("000");
-         ELSIF ((pres_state=442)) THEN 
+         ELSIF ((pres_state=359)) THEN 
             next_state<=0;
             execution_enable_register(0 downto 0) <= std_logic_vector'("0");
             com_enable_register(0 downto 0) <= std_logic_vector'("0");
-            go_register(1 downto 0) <= std_logic_vector'("00");
             pc_sel_register(2 downto 0) <= std_logic_vector'("100");
-         ELSIF ((pres_state=433) AND
+         ELSIF ((pres_state=350) AND
                 (s_data(1 DOWNTO 1)=std_logic_vector'("1"))) THEN 
-            next_state<=443;
-         ELSIF ((pres_state=443)) THEN 
+            next_state<=360;
+         ELSIF ((pres_state=360)) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=444)) THEN 
+         ELSIF ((pres_state=361)) THEN 
             next_state<=pres_state_plus_1;
             rs1_data_register(4 downto 0) <= s_data(0) & s_data(1) &
                   FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
                   FIFO_s_data(2)(0);
             result_select_register(2 downto 0) <= std_logic_vector'("111");
             branch_funct_register(2 downto 0) <= std_logic_vector'("100");
-         ELSIF ((pres_state=445)) THEN 
+         ELSIF ((pres_state=362)) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=446)) THEN 
+         ELSIF ((pres_state=363)) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=447)) THEN 
+         ELSIF ((pres_state=364)) THEN 
             next_state<=pres_state_plus_1;
             rs2_data_register(4 downto 0) <= s_data(1 downto 1) &
                   FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
                   FIFO_s_data(2)(0) & FIFO_s_data(2)(1);
-         ELSIF ((pres_state=448)) THEN 
+         ELSIF ((pres_state=365)) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=449)) THEN 
+         ELSIF ((pres_state=366)) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=450)) THEN 
+         ELSIF ((pres_state=367)) THEN 
             next_state<=pres_state_plus_1;
             imm7_data_register(6 downto 0) <= s_data(0) & s_data(1) &
                   FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
                   FIFO_s_data(2)(0) & FIFO_s_data(2)(1) &
                   FIFO_s_data(3)(0);
-            branch_bus_register(31 downto 0) <= branch_immediate(31 downto 0);
             execution_type_register(0 downto 0) <= std_logic_vector'("0");
             execution_enable_register(0 downto 0) <= std_logic_vector'("1");
-            go_register(1 downto 0) <= std_logic_vector'("10");
             pc_sel_register(2 downto 0) <= std_logic_vector'("000");
-         ELSIF ((pres_state=451)) THEN 
+         ELSIF ((pres_state=368)) THEN 
             next_state<=0;
             execution_enable_register(0 downto 0) <= std_logic_vector'("0");
             com_enable_register(0 downto 0) <= std_logic_vector'("0");
-            go_register(1 downto 0) <= std_logic_vector'("00");
             pc_sel_register(2 downto 0) <= std_logic_vector'("100");
-         ELSIF ((pres_state=432) AND
+         ELSIF ((pres_state=349) AND
                 (s_data(1 DOWNTO 0)=std_logic_vector'("10"))) THEN 
-            next_state<=452;
-         ELSIF ((pres_state=452) AND
+            next_state<=369;
+         ELSIF ((pres_state=369) AND
                 (s_data(1 DOWNTO 1)=std_logic_vector'("0"))) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=453)) THEN 
+         ELSIF ((pres_state=370)) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=454)) THEN 
+         ELSIF ((pres_state=371)) THEN 
             next_state<=pres_state_plus_1;
             rs1_data_register(4 downto 0) <= s_data(0) & s_data(1) &
                   FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
                   FIFO_s_data(2)(0);
             result_select_register(2 downto 0) <= std_logic_vector'("111");
             branch_funct_register(2 downto 0) <= std_logic_vector'("001");
-         ELSIF ((pres_state=455)) THEN 
+         ELSIF ((pres_state=372)) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=456)) THEN 
+         ELSIF ((pres_state=373)) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=457)) THEN 
+         ELSIF ((pres_state=374)) THEN 
             next_state<=pres_state_plus_1;
             rs2_data_register(4 downto 0) <= s_data(1 downto 1) &
                   FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
                   FIFO_s_data(2)(0) & FIFO_s_data(2)(1);
-         ELSIF ((pres_state=458)) THEN 
+         ELSIF ((pres_state=375)) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=459)) THEN 
+         ELSIF ((pres_state=376)) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=460)) THEN 
+         ELSIF ((pres_state=377)) THEN 
             next_state<=pres_state_plus_1;
             imm7_data_register(6 downto 0) <= s_data(0) & s_data(1) &
                   FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
                   FIFO_s_data(2)(0) & FIFO_s_data(2)(1) &
                   FIFO_s_data(3)(0);
-            branch_bus_register(31 downto 0) <= branch_immediate(31 downto 0);
             execution_type_register(0 downto 0) <= std_logic_vector'("0");
             execution_enable_register(0 downto 0) <= std_logic_vector'("1");
-            go_register(1 downto 0) <= std_logic_vector'("10");
             pc_sel_register(2 downto 0) <= std_logic_vector'("000");
-         ELSIF ((pres_state=461)) THEN 
+         ELSIF ((pres_state=378)) THEN 
             next_state<=0;
             execution_enable_register(0 downto 0) <= std_logic_vector'("0");
             com_enable_register(0 downto 0) <= std_logic_vector'("0");
-            go_register(1 downto 0) <= std_logic_vector'("00");
             pc_sel_register(2 downto 0) <= std_logic_vector'("100");
-         ELSIF ((pres_state=452) AND
+         ELSIF ((pres_state=369) AND
                 (s_data(1 DOWNTO 1)=std_logic_vector'("1"))) THEN 
-            next_state<=462;
-         ELSIF ((pres_state=462)) THEN 
+            next_state<=379;
+         ELSIF ((pres_state=379)) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=463)) THEN 
+         ELSIF ((pres_state=380)) THEN 
             next_state<=pres_state_plus_1;
             rs1_data_register(4 downto 0) <= s_data(0) & s_data(1) &
                   FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
                   FIFO_s_data(2)(0);
             result_select_register(2 downto 0) <= std_logic_vector'("111");
             branch_funct_register(2 downto 0) <= std_logic_vector'("101");
-         ELSIF ((pres_state=464)) THEN 
+         ELSIF ((pres_state=381)) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=465)) THEN 
+         ELSIF ((pres_state=382)) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=466)) THEN 
+         ELSIF ((pres_state=383)) THEN 
             next_state<=pres_state_plus_1;
             rs2_data_register(4 downto 0) <= s_data(1 downto 1) &
                   FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
                   FIFO_s_data(2)(0) & FIFO_s_data(2)(1);
-         ELSIF ((pres_state=467)) THEN 
+         ELSIF ((pres_state=384)) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=468)) THEN 
+         ELSIF ((pres_state=385)) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=469)) THEN 
+         ELSIF ((pres_state=386)) THEN 
             next_state<=pres_state_plus_1;
             imm7_data_register(6 downto 0) <= s_data(0) & s_data(1) &
                   FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
                   FIFO_s_data(2)(0) & FIFO_s_data(2)(1) &
                   FIFO_s_data(3)(0);
-            branch_bus_register(31 downto 0) <= branch_immediate(31 downto 0);
             execution_type_register(0 downto 0) <= std_logic_vector'("0");
             execution_enable_register(0 downto 0) <= std_logic_vector'("1");
-            go_register(1 downto 0) <= std_logic_vector'("10");
             pc_sel_register(2 downto 0) <= std_logic_vector'("000");
-         ELSIF ((pres_state=470)) THEN 
+         ELSIF ((pres_state=387)) THEN 
             next_state<=0;
             execution_enable_register(0 downto 0) <= std_logic_vector'("0");
             com_enable_register(0 downto 0) <= std_logic_vector'("0");
-            go_register(1 downto 0) <= std_logic_vector'("00");
             pc_sel_register(2 downto 0) <= std_logic_vector'("100");
-         ELSIF ((pres_state=432) AND
+         ELSIF ((pres_state=349) AND
                 (s_data(1 DOWNTO 0)=std_logic_vector'("01"))) THEN 
-            next_state<=471;
-         ELSIF ((pres_state=471) AND
+            next_state<=388;
+         ELSIF ((pres_state=388) AND
                 (s_data(1 DOWNTO 1)=std_logic_vector'("1"))) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=472)) THEN 
+         ELSIF ((pres_state=389)) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=473)) THEN 
+         ELSIF ((pres_state=390)) THEN 
             next_state<=pres_state_plus_1;
             rs1_data_register(4 downto 0) <= s_data(0) & s_data(1) &
                   FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
                   FIFO_s_data(2)(0);
             result_select_register(2 downto 0) <= std_logic_vector'("111");
             branch_funct_register(2 downto 0) <= std_logic_vector'("110");
-         ELSIF ((pres_state=474)) THEN 
+         ELSIF ((pres_state=391)) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=475)) THEN 
+         ELSIF ((pres_state=392)) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=476)) THEN 
+         ELSIF ((pres_state=393)) THEN 
             next_state<=pres_state_plus_1;
             rs2_data_register(4 downto 0) <= s_data(1 downto 1) &
                   FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
                   FIFO_s_data(2)(0) & FIFO_s_data(2)(1);
-         ELSIF ((pres_state=477)) THEN 
+         ELSIF ((pres_state=394)) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=478)) THEN 
+         ELSIF ((pres_state=395)) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=479)) THEN 
+         ELSIF ((pres_state=396)) THEN 
             next_state<=pres_state_plus_1;
             imm7_data_register(6 downto 0) <= s_data(0) & s_data(1) &
                   FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
@@ -2309,43 +1960,41 @@ BEGIN
                   imm5_data_internal(4 downto 0);
             execution_type_register(0 downto 0) <= std_logic_vector'("0");
             execution_enable_register(0 downto 0) <= std_logic_vector'("1");
-            go_register(1 downto 0) <= std_logic_vector'("10");
             pc_sel_register(2 downto 0) <= std_logic_vector'("000");
-         ELSIF ((pres_state=480)) THEN 
+         ELSIF ((pres_state=397)) THEN 
             next_state<=0;
             execution_enable_register(0 downto 0) <= std_logic_vector'("0");
             com_enable_register(0 downto 0) <= std_logic_vector'("0");
-            go_register(1 downto 0) <= std_logic_vector'("00");
             pc_sel_register(2 downto 0) <= std_logic_vector'("100");
-         ELSIF ((pres_state=432) AND
+         ELSIF ((pres_state=349) AND
                 (s_data(1 DOWNTO 0)=std_logic_vector'("11"))) THEN 
-            next_state<=481;
-         ELSIF ((pres_state=481) AND
+            next_state<=398;
+         ELSIF ((pres_state=398) AND
                 (s_data(1 DOWNTO 1)=std_logic_vector'("1"))) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=482)) THEN 
+         ELSIF ((pres_state=399)) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=483)) THEN 
+         ELSIF ((pres_state=400)) THEN 
             next_state<=pres_state_plus_1;
             rs1_data_register(4 downto 0) <= s_data(0) & s_data(1) &
                   FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
                   FIFO_s_data(2)(0);
             result_select_register(2 downto 0) <= std_logic_vector'("111");
             branch_funct_register(2 downto 0) <= std_logic_vector'("111");
-         ELSIF ((pres_state=484)) THEN 
+         ELSIF ((pres_state=401)) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=485)) THEN 
+         ELSIF ((pres_state=402)) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=486)) THEN 
+         ELSIF ((pres_state=403)) THEN 
             next_state<=pres_state_plus_1;
             rs2_data_register(4 downto 0) <= s_data(1 downto 1) &
                   FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
                   FIFO_s_data(2)(0) & FIFO_s_data(2)(1);
-         ELSIF ((pres_state=487)) THEN 
+         ELSIF ((pres_state=404)) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=488)) THEN 
+         ELSIF ((pres_state=405)) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=489)) THEN 
+         ELSIF ((pres_state=406)) THEN 
             next_state<=pres_state_plus_1;
             imm7_data_register(6 downto 0) <= s_data(0) & s_data(1) &
                   FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
@@ -2356,36 +2005,34 @@ BEGIN
                   imm5_data_internal(4 downto 0);
             execution_type_register(0 downto 0) <= std_logic_vector'("0");
             execution_enable_register(0 downto 0) <= std_logic_vector'("1");
-            go_register(1 downto 0) <= std_logic_vector'("10");
             pc_sel_register(2 downto 0) <= std_logic_vector'("000");
-         ELSIF ((pres_state=490)) THEN 
+         ELSIF ((pres_state=407)) THEN 
             next_state<=0;
             execution_enable_register(0 downto 0) <= std_logic_vector'("0");
             com_enable_register(0 downto 0) <= std_logic_vector'("0");
-            go_register(1 downto 0) <= std_logic_vector'("00");
             pc_sel_register(2 downto 0) <= std_logic_vector'("100");
-         ELSIF ((pres_state=104) AND
+         ELSIF ((pres_state=83) AND
                 (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
-            next_state<=491;
-         ELSIF ((pres_state=491) AND
+            next_state<=408;
+         ELSIF ((pres_state=408) AND
                 (s_data(1 DOWNTO 1)=std_logic_vector'("0"))) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=492)) THEN 
+         ELSIF ((pres_state=409)) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=493)) THEN 
+         ELSIF ((pres_state=410)) THEN 
             next_state<=pres_state_plus_1;
             rd_data_register(4 downto 0) <= s_data(0) & s_data(1) &
                   FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
                   FIFO_s_data(2)(0);
-         ELSIF ((pres_state=494) AND
+         ELSIF ((pres_state=411) AND
                 (s_data(1 DOWNTO 0)=std_logic_vector'("00"))) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=495) AND
+         ELSIF ((pres_state=412) AND
                 (s_data(1 DOWNTO 1)=std_logic_vector'("0"))) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=496)) THEN 
+         ELSIF ((pres_state=413)) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=497)) THEN 
+         ELSIF ((pres_state=414)) THEN 
             next_state<=pres_state_plus_1;
             rs_sel_register(1 downto 0) <= std_logic_vector'("10");
             rs1_data_register(4 downto 0) <= s_data(0) & s_data(1) &
@@ -2394,6 +2041,285 @@ BEGIN
             alu_ctrl_register(2 downto 0) <= std_logic_vector'("000");
             alu_funct_register(0 downto 0) <= std_logic_vector'("0");
             result_select_register(2 downto 0) <= std_logic_vector'("001");
+         ELSIF ((pres_state=415)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=416)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=417)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=418)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=419)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=420)) THEN 
+            next_state<=pres_state_plus_1;
+            imm12_data_register(11 downto 0) <= s_data(0) & s_data(1) &
+                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
+                  FIFO_s_data(2)(0) & FIFO_s_data(2)(1) &
+                  FIFO_s_data(3)(0) & FIFO_s_data(3)(1) &
+                  FIFO_s_data(4)(0) & FIFO_s_data(4)(1) &
+                  FIFO_s_data(5)(0) & FIFO_s_data(5)(1);
+            execution_type_register(0 downto 0) <= std_logic_vector'("1");
+            execution_enable_register(0 downto 0) <= std_logic_vector'("1");
+         ELSIF ((pres_state=421)) THEN 
+            next_state<=pres_state_plus_1;
+            op2_alt_register(31 downto 0) <= L_immediate(31 downto 0);
+            execution_enable_register(0 downto 0) <= std_logic_vector'("0");
+            com_enable_register(0 downto 0) <= std_logic_vector'("0");
+         ELSIF ((pres_state=422)) THEN 
+            next_state<=pres_state_plus_1;
+            reset_parity_register(0 downto 0) <= std_logic_vector'("0");
+            com_enable_register(0 downto 0) <= std_logic_vector'("1");
+            m_active_register(0 downto 0) <= std_logic_vector'("1");
+            internal_addr_register(1 downto 0) <= std_logic_vector'("10");
+         ELSIF ((pres_state=423)) THEN 
+            next_state<=pres_state_plus_1;
+            receiving_register(0 downto 0) <= std_logic_vector'("1");
+            internal_addr_register(1 downto 0) <= reversed_result_bus(31 downto 30);
+         ELSIF ((pres_state=424)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(29 downto 28);
+         ELSIF ((pres_state=425)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(27 downto 26);
+         ELSIF ((pres_state=426)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(25 downto 24);
+         ELSIF ((pres_state=427)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(23 downto 22);
+         ELSIF ((pres_state=428)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(21 downto 20);
+         ELSIF ((pres_state=429)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(19 downto 18);
+         ELSIF ((pres_state=430)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(17 downto 16);
+         ELSIF ((pres_state=431)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(15 downto 14);
+         ELSIF ((pres_state=432)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(13 downto 12);
+         ELSIF ((pres_state=433)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(11 downto 10);
+         ELSIF ((pres_state=434)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(9 downto 8);
+         ELSIF ((pres_state=435)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(7 downto 6);
+         ELSIF ((pres_state=436)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(5 downto 4);
+         ELSIF ((pres_state=437)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(3 downto 2);
+         ELSIF ((pres_state=438)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(1 downto 0);
+            receiving_register(0 downto 0) <= std_logic_vector'("0");
+         ELSIF ((pres_state=439)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= parity_addr(1 downto 0);
+         ELSIF ((pres_state=440)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=441) AND
+                (s_active(0 DOWNTO 0)=std_logic_vector'("1"))) THEN 
+            next_state<=pres_state_plus_1;
+            m_active_register(0 downto 0) <= std_logic_vector'("0");
+            reset_parity_register(0 downto 0) <= std_logic_vector'("1");
+         ELSIF ((pres_state=442)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=443)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=444)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=445)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=446)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=447)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=448)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=449)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=450)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=451)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=452)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=453)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=454)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=455)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=456)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=457)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=458)) THEN 
+            next_state<=pres_state_plus_1;
+            load_result_register(31 downto 0) <= s_data(0) & s_data(0) &
+                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
+                  FIFO_s_data(2)(0) & FIFO_s_data(2)(1) &
+                  FIFO_s_data(3)(0) & FIFO_s_data(3)(1) &
+                  FIFO_s_data(4)(0) & FIFO_s_data(4)(1) &
+                  FIFO_s_data(5)(0) & FIFO_s_data(5)(1) &
+                  FIFO_s_data(6)(0) & FIFO_s_data(6)(1) &
+                  FIFO_s_data(7)(0) & FIFO_s_data(7)(1) &
+                  FIFO_s_data(8)(0) & FIFO_s_data(8)(1) &
+                  FIFO_s_data(9)(0) & FIFO_s_data(9)(1) &
+                  FIFO_s_data(10)(0) & FIFO_s_data(10)(1) &
+                  FIFO_s_data(11)(0) & FIFO_s_data(11)(1) &
+                  FIFO_s_data(12)(0) & FIFO_s_data(12)(1) &
+                  FIFO_s_data(13)(0) & FIFO_s_data(13)(1) &
+                  FIFO_s_data(14)(0) & FIFO_s_data(14)(1) &
+                  FIFO_s_data(15)(0) & FIFO_s_data(15)(1);
+            result_select_register(2 downto 0) <= std_logic_vector'("100");
+            load_writeback_enable_register(0 downto 0) <= std_logic_vector'("1");
+            result_ready_decode_register(0 downto 0) <= std_logic_vector'("1");
+            pc_sel_register(2 downto 0) <= std_logic_vector'("000");
+         ELSIF ((pres_state=459)) THEN 
+            next_state<=0;
+            load_writeback_enable_register(0 downto 0) <= std_logic_vector'("0");
+            result_ready_decode_register(0 downto 0) <= std_logic_vector'("0");
+            com_enable_register(0 downto 0) <= std_logic_vector'("0");
+            pc_sel_register(2 downto 0) <= std_logic_vector'("001");
+         ELSIF ((pres_state=441) AND
+                (s_active(0 DOWNTO 0)=std_logic_vector'("0"))) THEN 
+            next_state<=1;
+              next_state <= 0;  
+             m_active_register(0 downto 0) <= std_logic_vector'("0");
+            reset_parity_register(0 downto 0) <= std_logic_vector'("1");
+            com_enable_register(0 downto 0) <= std_logic_vector'("0");
+         ELSIF ((pres_state=412) AND
+                (s_data(1 DOWNTO 1)=std_logic_vector'("1"))) THEN 
+            next_state<=460;
+         ELSIF ((pres_state=460)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=461)) THEN 
+            next_state<=pres_state_plus_1;
+            rs_sel_register(1 downto 0) <= std_logic_vector'("10");
+            rs1_data_register(4 downto 0) <= s_data(0) & s_data(1) &
+                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
+                  FIFO_s_data(2)(0);
+            alu_ctrl_register(2 downto 0) <= std_logic_vector'("000");
+            alu_funct_register(0 downto 0) <= std_logic_vector'("0");
+            result_select_register(2 downto 0) <= std_logic_vector'("001");
+         ELSIF ((pres_state=462)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=463)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=464)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=465)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=466)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=467)) THEN 
+            next_state<=pres_state_plus_1;
+            op2_alt_register(31 downto 0) <= std_logic_vector'("00000000000000000000") &
+                  s_data(0) & s_data(1) &
+                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
+                  FIFO_s_data(2)(0) & FIFO_s_data(2)(1) &
+                  FIFO_s_data(3)(0) & FIFO_s_data(3)(1) &
+                  FIFO_s_data(4)(0) & FIFO_s_data(4)(1) &
+                  FIFO_s_data(5)(0) & FIFO_s_data(5)(1);
+            execution_type_register(0 downto 0) <= std_logic_vector'("1");
+         ELSIF ((pres_state=468)) THEN 
+            next_state<=pres_state_plus_1;
+            com_enable_register(0 downto 0) <= std_logic_vector'("0");
+         ELSIF ((pres_state=469)) THEN 
+            next_state<=pres_state_plus_1;
+            reset_parity_register(0 downto 0) <= std_logic_vector'("0");
+            com_enable_register(0 downto 0) <= std_logic_vector'("1");
+            m_active_register(0 downto 0) <= std_logic_vector'("1");
+            internal_addr_register(1 downto 0) <= std_logic_vector'("10");
+         ELSIF ((pres_state=470)) THEN 
+            next_state<=pres_state_plus_1;
+            receiving_register(0 downto 0) <= std_logic_vector'("1");
+            internal_addr_register(1 downto 0) <= reversed_result_bus(31 downto 30);
+         ELSIF ((pres_state=471)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(29 downto 28);
+         ELSIF ((pres_state=472)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(27 downto 26);
+         ELSIF ((pres_state=473)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(25 downto 24);
+         ELSIF ((pres_state=474)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(23 downto 22);
+         ELSIF ((pres_state=475)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(21 downto 20);
+         ELSIF ((pres_state=476)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(19 downto 18);
+         ELSIF ((pres_state=477)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(17 downto 16);
+         ELSIF ((pres_state=478)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(15 downto 14);
+         ELSIF ((pres_state=479)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(13 downto 12);
+         ELSIF ((pres_state=480)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(11 downto 10);
+         ELSIF ((pres_state=481)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(9 downto 8);
+         ELSIF ((pres_state=482)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(7 downto 6);
+         ELSIF ((pres_state=483)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(5 downto 4);
+         ELSIF ((pres_state=484)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(3 downto 2);
+         ELSIF ((pres_state=485)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(1 downto 0);
+            receiving_register(0 downto 0) <= std_logic_vector'("0");
+         ELSIF ((pres_state=486)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= parity_addr(1 downto 0);
+         ELSIF ((pres_state=487)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=488) AND
+                (s_active(0 DOWNTO 0)=std_logic_vector'("1"))) THEN 
+            next_state<=pres_state_plus_1;
+            m_active_register(0 downto 0) <= std_logic_vector'("0");
+            reset_parity_register(0 downto 0) <= std_logic_vector'("1");
+         ELSIF ((pres_state=489)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=490)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=491)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=492)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=493)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=494)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=495)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=496)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=497)) THEN 
+            next_state<=pres_state_plus_1;
          ELSIF ((pres_state=498)) THEN 
             next_state<=pres_state_plus_1;
          ELSIF ((pres_state=499)) THEN 
@@ -2406,155 +2332,52 @@ BEGIN
             next_state<=pres_state_plus_1;
          ELSIF ((pres_state=503)) THEN 
             next_state<=pres_state_plus_1;
-            imm12_data_register(11 downto 0) <= s_data(0) & s_data(1) &
+         ELSIF ((pres_state=504)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=505)) THEN 
+            next_state<=pres_state_plus_1;
+            load_result_register(31 downto 0) <= s_data(0) & s_data(0) &
                   FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
                   FIFO_s_data(2)(0) & FIFO_s_data(2)(1) &
                   FIFO_s_data(3)(0) & FIFO_s_data(3)(1) &
                   FIFO_s_data(4)(0) & FIFO_s_data(4)(1) &
-                  FIFO_s_data(5)(0) & FIFO_s_data(5)(1);
-            op2_alt_register(31 downto 0) <= L_immediate(31 downto 0);
-            execution_type_register(0 downto 0) <= std_logic_vector'("1");
-            execution_enable_register(0 downto 0) <= std_logic_vector'("1");
-         ELSIF ((pres_state=504)) THEN 
-            next_state<=pres_state_plus_1;
-            execution_enable_register(0 downto 0) <= std_logic_vector'("0");
-            com_enable_register(0 downto 0) <= std_logic_vector'("0");
-         ELSIF ((pres_state=505)) THEN 
-            next_state<=pres_state_plus_1;
-            com_enable_register(0 downto 0) <= std_logic_vector'("1");
-            m_active_register(0 downto 0) <= std_logic_vector'("1");
-            internal_addr_register(1 downto 0) <= std_logic_vector'("10");
-         ELSIF ((pres_state=506)) THEN 
-            next_state<=pres_state_plus_1;
-            receiving_register(0 downto 0) <= std_logic_vector'("1");
-            internal_addr_register(1 downto 0) <= reversed_result_bus(31 downto 30);
-         ELSIF ((pres_state=507)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(29 downto 28);
-         ELSIF ((pres_state=508)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(27 downto 26);
-         ELSIF ((pres_state=509)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(25 downto 24);
-         ELSIF ((pres_state=510)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(23 downto 22);
-         ELSIF ((pres_state=511)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(21 downto 20);
-         ELSIF ((pres_state=512)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(19 downto 18);
-         ELSIF ((pres_state=513)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(17 downto 16);
-         ELSIF ((pres_state=514)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(15 downto 14);
-         ELSIF ((pres_state=515)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(13 downto 12);
-         ELSIF ((pres_state=516)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(11 downto 10);
-         ELSIF ((pres_state=517)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(9 downto 8);
-         ELSIF ((pres_state=518)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(7 downto 6);
-         ELSIF ((pres_state=519)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(5 downto 4);
-         ELSIF ((pres_state=520)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(3 downto 2);
-         ELSIF ((pres_state=521)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(1 downto 0);
-            receiving_register(0 downto 0) <= std_logic_vector'("0");
-         ELSIF ((pres_state=522)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= parity_addr(1 downto 0);
-         ELSIF ((pres_state=523) AND
-                (s_active(0 DOWNTO 0)=std_logic_vector'("1"))) THEN 
-            next_state<=pres_state_plus_1;
-            m_active_register(0 downto 0) <= std_logic_vector'("0");
-            reset_parity_register(0 downto 0) <= std_logic_vector'("1");
-         ELSIF ((pres_state=524)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=525)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=526)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=527)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=528)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=529)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=530)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=531)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=532)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=533)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=534)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=535)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=536)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=537)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=538)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=539)) THEN 
-            next_state<=pres_state_plus_1;
-            load_result_register(31 downto 0) <= s_data(0) & s_data(0) & 
-                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) & 
-                  FIFO_s_data(2)(0) & FIFO_s_data(2)(1) & 
-                  FIFO_s_data(3)(0) & FIFO_s_data(3)(1) & 
-                  FIFO_s_data(4)(0) & FIFO_s_data(4)(1) & 
-                  FIFO_s_data(5)(0) & FIFO_s_data(5)(1) & 
-                  FIFO_s_data(6)(0) & FIFO_s_data(6)(1) & 
-                  FIFO_s_data(7)(0) & FIFO_s_data(7)(1) & 
-                  FIFO_s_data(8)(0) & FIFO_s_data(8)(1) & 
-                  FIFO_s_data(9)(0) & FIFO_s_data(9)(1) & 
-                  FIFO_s_data(10)(0) & FIFO_s_data(10)(1) & 
-                  FIFO_s_data(11)(0) & FIFO_s_data(11)(1) & 
-                  FIFO_s_data(12)(0) & FIFO_s_data(12)(1) & 
-                  FIFO_s_data(13)(0) & FIFO_s_data(13)(1) & 
-                  FIFO_s_data(14)(0) & FIFO_s_data(14)(1) & 
+                  FIFO_s_data(5)(0) & FIFO_s_data(5)(1) &
+                  FIFO_s_data(6)(0) & FIFO_s_data(6)(1) &
+                  FIFO_s_data(7)(0) & FIFO_s_data(7)(1) &
+                  FIFO_s_data(8)(0) & FIFO_s_data(8)(1) &
+                  FIFO_s_data(9)(0) & FIFO_s_data(9)(1) &
+                  FIFO_s_data(10)(0) & FIFO_s_data(10)(1) &
+                  FIFO_s_data(11)(0) & FIFO_s_data(11)(1) &
+                  FIFO_s_data(12)(0) & FIFO_s_data(12)(1) &
+                  FIFO_s_data(13)(0) & FIFO_s_data(13)(1) &
+                  FIFO_s_data(14)(0) & FIFO_s_data(14)(1) &
                   FIFO_s_data(15)(0) & FIFO_s_data(15)(1);
             result_select_register(2 downto 0) <= std_logic_vector'("100");
             load_writeback_enable_register(0 downto 0) <= std_logic_vector'("1");
             result_ready_decode_register(0 downto 0) <= std_logic_vector'("1");
-            go_register(1 downto 0) <= std_logic_vector'("10");
             pc_sel_register(2 downto 0) <= std_logic_vector'("000");
-         ELSIF ((pres_state=540)) THEN 
+         ELSIF ((pres_state=506)) THEN 
             next_state<=0;
             load_writeback_enable_register(0 downto 0) <= std_logic_vector'("0");
             result_ready_decode_register(0 downto 0) <= std_logic_vector'("0");
             com_enable_register(0 downto 0) <= std_logic_vector'("0");
-            go_register(1 downto 0) <= std_logic_vector'("00");
             pc_sel_register(2 downto 0) <= std_logic_vector'("001");
-         ELSIF ((pres_state=523) AND
+         ELSIF ((pres_state=488) AND
                 (s_active(0 DOWNTO 0)=std_logic_vector'("0"))) THEN 
             next_state<=1;
               next_state <= 0;  
              m_active_register(0 downto 0) <= std_logic_vector'("0");
             reset_parity_register(0 downto 0) <= std_logic_vector'("1");
             com_enable_register(0 downto 0) <= std_logic_vector'("0");
-         ELSIF ((pres_state=495) AND
-                (s_data(1 DOWNTO 1)=std_logic_vector'("1"))) THEN 
-            next_state<=541;
-         ELSIF ((pres_state=541)) THEN 
+         ELSIF ((pres_state=411) AND
+                (s_data(1 DOWNTO 0)=std_logic_vector'("10"))) THEN 
+            next_state<=507;
+         ELSIF ((pres_state=507) AND
+                (s_data(1 DOWNTO 1)=std_logic_vector'("0"))) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=542)) THEN 
+         ELSIF ((pres_state=508)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=509)) THEN 
             next_state<=pres_state_plus_1;
             rs_sel_register(1 downto 0) <= std_logic_vector'("10");
             rs1_data_register(4 downto 0) <= s_data(0) & s_data(1) &
@@ -2563,6 +2386,109 @@ BEGIN
             alu_ctrl_register(2 downto 0) <= std_logic_vector'("000");
             alu_funct_register(0 downto 0) <= std_logic_vector'("0");
             result_select_register(2 downto 0) <= std_logic_vector'("001");
+         ELSIF ((pres_state=510)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=511)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=512)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=513)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=514)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=515)) THEN 
+            next_state<=pres_state_plus_1;
+            imm12_data_register(11 downto 0) <= s_data(0) & s_data(1) &
+                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
+                  FIFO_s_data(2)(0) & FIFO_s_data(2)(1) &
+                  FIFO_s_data(3)(0) & FIFO_s_data(3)(1) &
+                  FIFO_s_data(4)(0) & FIFO_s_data(4)(1) &
+                  FIFO_s_data(5)(0) & FIFO_s_data(5)(1);
+            execution_type_register(0 downto 0) <= std_logic_vector'("1");
+            execution_enable_register(0 downto 0) <= std_logic_vector'("1");
+         ELSIF ((pres_state=516)) THEN 
+            next_state<=pres_state_plus_1;
+            op2_alt_register(31 downto 0) <= L_immediate(31 downto 0);
+            execution_enable_register(0 downto 0) <= std_logic_vector'("0");
+            com_enable_register(0 downto 0) <= std_logic_vector'("0");
+         ELSIF ((pres_state=517)) THEN 
+            next_state<=pres_state_plus_1;
+            reset_parity_register(0 downto 0) <= std_logic_vector'("0");
+            com_enable_register(0 downto 0) <= std_logic_vector'("1");
+            m_active_register(0 downto 0) <= std_logic_vector'("1");
+            internal_addr_register(1 downto 0) <= std_logic_vector'("10");
+         ELSIF ((pres_state=518)) THEN 
+            next_state<=pres_state_plus_1;
+            receiving_register(0 downto 0) <= std_logic_vector'("1");
+            internal_addr_register(1 downto 0) <= reversed_result_bus(31 downto 30);
+         ELSIF ((pres_state=519)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(29 downto 28);
+         ELSIF ((pres_state=520)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(27 downto 26);
+         ELSIF ((pres_state=521)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(25 downto 24);
+         ELSIF ((pres_state=522)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(23 downto 22);
+         ELSIF ((pres_state=523)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(21 downto 20);
+         ELSIF ((pres_state=524)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(19 downto 18);
+         ELSIF ((pres_state=525)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(17 downto 16);
+         ELSIF ((pres_state=526)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(15 downto 14);
+         ELSIF ((pres_state=527)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(13 downto 12);
+         ELSIF ((pres_state=528)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(11 downto 10);
+         ELSIF ((pres_state=529)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(9 downto 8);
+         ELSIF ((pres_state=530)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(7 downto 6);
+         ELSIF ((pres_state=531)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(5 downto 4);
+         ELSIF ((pres_state=532)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(3 downto 2);
+         ELSIF ((pres_state=533)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(1 downto 0);
+            receiving_register(0 downto 0) <= std_logic_vector'("0");
+         ELSIF ((pres_state=534)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= parity_addr(1 downto 0);
+         ELSIF ((pres_state=535)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=536) AND
+                (s_active(0 DOWNTO 0)=std_logic_vector'("1"))) THEN 
+            next_state<=pres_state_plus_1;
+            m_active_register(0 downto 0) <= std_logic_vector'("0");
+            reset_parity_register(0 downto 0) <= std_logic_vector'("1");
+         ELSIF ((pres_state=537)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=538)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=539)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=540)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=541)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=542)) THEN 
+            next_state<=pres_state_plus_1;
          ELSIF ((pres_state=543)) THEN 
             next_state<=pres_state_plus_1;
          ELSIF ((pres_state=544)) THEN 
@@ -2575,158 +2501,55 @@ BEGIN
             next_state<=pres_state_plus_1;
          ELSIF ((pres_state=548)) THEN 
             next_state<=pres_state_plus_1;
-            op2_alt_register(31 downto 0) <= std_logic_vector'("00000000000000000000") &
-                  s_data(0) & s_data(1) &
+         ELSIF ((pres_state=549)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=550)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=551)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=552)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=553)) THEN 
+            next_state<=pres_state_plus_1;
+            load_result_register(31 downto 0) <= s_data(0) & s_data(0) &
                   FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
                   FIFO_s_data(2)(0) & FIFO_s_data(2)(1) &
                   FIFO_s_data(3)(0) & FIFO_s_data(3)(1) &
                   FIFO_s_data(4)(0) & FIFO_s_data(4)(1) &
-                  FIFO_s_data(5)(0) & FIFO_s_data(5)(1);
-            execution_type_register(0 downto 0) <= std_logic_vector'("1");
-            execution_enable_register(0 downto 0) <= std_logic_vector'("1");
-         ELSIF ((pres_state=549)) THEN 
-            next_state<=pres_state_plus_1;
-            execution_enable_register(0 downto 0) <= std_logic_vector'("0");
-            com_enable_register(0 downto 0) <= std_logic_vector'("0");
-         ELSIF ((pres_state=550)) THEN 
-            next_state<=pres_state_plus_1;
-            com_enable_register(0 downto 0) <= std_logic_vector'("1");
-            m_active_register(0 downto 0) <= std_logic_vector'("1");
-            internal_addr_register(1 downto 0) <= std_logic_vector'("10");
-         ELSIF ((pres_state=551)) THEN 
-            next_state<=pres_state_plus_1;
-            receiving_register(0 downto 0) <= std_logic_vector'("1");
-            internal_addr_register(1 downto 0) <= reversed_result_bus(31 downto 30);
-         ELSIF ((pres_state=552)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(29 downto 28);
-         ELSIF ((pres_state=553)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(27 downto 26);
-         ELSIF ((pres_state=554)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(25 downto 24);
-         ELSIF ((pres_state=555)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(23 downto 22);
-         ELSIF ((pres_state=556)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(21 downto 20);
-         ELSIF ((pres_state=557)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(19 downto 18);
-         ELSIF ((pres_state=558)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(17 downto 16);
-         ELSIF ((pres_state=559)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(15 downto 14);
-         ELSIF ((pres_state=560)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(13 downto 12);
-         ELSIF ((pres_state=561)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(11 downto 10);
-         ELSIF ((pres_state=562)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(9 downto 8);
-         ELSIF ((pres_state=563)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(7 downto 6);
-         ELSIF ((pres_state=564)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(5 downto 4);
-         ELSIF ((pres_state=565)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(3 downto 2);
-         ELSIF ((pres_state=566)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(1 downto 0);
-            receiving_register(0 downto 0) <= std_logic_vector'("0");
-         ELSIF ((pres_state=567)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= parity_addr(1 downto 0);
-         ELSIF ((pres_state=568) AND
-                (s_active(0 DOWNTO 0)=std_logic_vector'("1"))) THEN 
-            next_state<=pres_state_plus_1;
-            m_active_register(0 downto 0) <= std_logic_vector'("0");
-            reset_parity_register(0 downto 0) <= std_logic_vector'("1");
-         ELSIF ((pres_state=569)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=570)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=571)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=572)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=573)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=574)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=575)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=576)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=577)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=578)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=579)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=580)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=581)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=582)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=583)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=584)) THEN 
-            next_state<=pres_state_plus_1;
-            load_result_register(31 downto 0) <= s_data(1 downto 0) & 
-                  FIFO_s_data(1)(1 downto 0) & 
-                  FIFO_s_data(2)(1 downto 0) & 
-                  FIFO_s_data(3)(1 downto 0) & 
-                  FIFO_s_data(4)(1 downto 0) & 
-                  FIFO_s_data(5)(1 downto 0) & 
-                  FIFO_s_data(6)(1 downto 0) & 
-                  FIFO_s_data(7)(1 downto 0) & 
-                  FIFO_s_data(8)(1 downto 0) & 
-                  FIFO_s_data(9)(1 downto 0) & 
-                  FIFO_s_data(10)(1 downto 0) & 
-                  FIFO_s_data(11)(1 downto 0) & 
-                  FIFO_s_data(12)(1 downto 0) & 
-                  FIFO_s_data(13)(1 downto 0) & 
-                  FIFO_s_data(14)(1 downto 0) & 
-                  FIFO_s_data(15)(1 downto 0);
+                  FIFO_s_data(5)(0) & FIFO_s_data(5)(1) &
+                  FIFO_s_data(6)(0) & FIFO_s_data(6)(1) &
+                  FIFO_s_data(7)(0) & FIFO_s_data(7)(1) &
+                  FIFO_s_data(8)(0) & FIFO_s_data(8)(1) &
+                  FIFO_s_data(9)(0) & FIFO_s_data(9)(1) &
+                  FIFO_s_data(10)(0) & FIFO_s_data(10)(1) &
+                  FIFO_s_data(11)(0) & FIFO_s_data(11)(1) &
+                  FIFO_s_data(12)(0) & FIFO_s_data(12)(1) &
+                  FIFO_s_data(13)(0) & FIFO_s_data(13)(1) &
+                  FIFO_s_data(14)(0) & FIFO_s_data(14)(1) &
+                  FIFO_s_data(15)(0) & FIFO_s_data(15)(1);
             result_select_register(2 downto 0) <= std_logic_vector'("100");
             load_writeback_enable_register(0 downto 0) <= std_logic_vector'("1");
             result_ready_decode_register(0 downto 0) <= std_logic_vector'("1");
-            go_register(1 downto 0) <= std_logic_vector'("10");
             pc_sel_register(2 downto 0) <= std_logic_vector'("000");
-         ELSIF ((pres_state=585)) THEN 
+         ELSIF ((pres_state=554)) THEN 
             next_state<=0;
             load_writeback_enable_register(0 downto 0) <= std_logic_vector'("0");
             result_ready_decode_register(0 downto 0) <= std_logic_vector'("0");
             com_enable_register(0 downto 0) <= std_logic_vector'("0");
-            go_register(1 downto 0) <= std_logic_vector'("00");
             pc_sel_register(2 downto 0) <= std_logic_vector'("001");
-         ELSIF ((pres_state=568) AND
+         ELSIF ((pres_state=536) AND
                 (s_active(0 DOWNTO 0)=std_logic_vector'("0"))) THEN 
             next_state<=1;
               next_state <= 0;  
              m_active_register(0 downto 0) <= std_logic_vector'("0");
             reset_parity_register(0 downto 0) <= std_logic_vector'("1");
             com_enable_register(0 downto 0) <= std_logic_vector'("0");
-         ELSIF ((pres_state=494) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("10"))) THEN 
-            next_state<=586;
-         ELSIF ((pres_state=586) AND
-                (s_data(1 DOWNTO 1)=std_logic_vector'("0"))) THEN 
+         ELSIF ((pres_state=507) AND
+                (s_data(1 DOWNTO 1)=std_logic_vector'("1"))) THEN 
+            next_state<=555;
+         ELSIF ((pres_state=555)) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=587)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=588)) THEN 
+         ELSIF ((pres_state=556)) THEN 
             next_state<=pres_state_plus_1;
             rs_sel_register(1 downto 0) <= std_logic_vector'("10");
             rs1_data_register(4 downto 0) <= s_data(0) & s_data(1) &
@@ -2735,6 +2558,105 @@ BEGIN
             alu_ctrl_register(2 downto 0) <= std_logic_vector'("000");
             alu_funct_register(0 downto 0) <= std_logic_vector'("0");
             result_select_register(2 downto 0) <= std_logic_vector'("001");
+         ELSIF ((pres_state=557)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=558)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=559)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=560)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=561)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=562)) THEN 
+            next_state<=pres_state_plus_1;
+            op2_alt_register(31 downto 0) <= std_logic_vector'("00000000000000000000") &
+                  s_data(0) & s_data(1) &
+                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
+                  FIFO_s_data(2)(0) & FIFO_s_data(2)(1) &
+                  FIFO_s_data(3)(0) & FIFO_s_data(3)(1) &
+                  FIFO_s_data(4)(0) & FIFO_s_data(4)(1) &
+                  FIFO_s_data(5)(0) & FIFO_s_data(5)(1);
+            execution_type_register(0 downto 0) <= std_logic_vector'("1");
+         ELSIF ((pres_state=563)) THEN 
+            next_state<=pres_state_plus_1;
+            com_enable_register(0 downto 0) <= std_logic_vector'("0");
+         ELSIF ((pres_state=564)) THEN 
+            next_state<=pres_state_plus_1;
+            reset_parity_register(0 downto 0) <= std_logic_vector'("0");
+            com_enable_register(0 downto 0) <= std_logic_vector'("1");
+            m_active_register(0 downto 0) <= std_logic_vector'("1");
+            internal_addr_register(1 downto 0) <= std_logic_vector'("10");
+         ELSIF ((pres_state=565)) THEN 
+            next_state<=pres_state_plus_1;
+            receiving_register(0 downto 0) <= std_logic_vector'("1");
+            internal_addr_register(1 downto 0) <= reversed_result_bus(31 downto 30);
+         ELSIF ((pres_state=566)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(29 downto 28);
+         ELSIF ((pres_state=567)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(27 downto 26);
+         ELSIF ((pres_state=568)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(25 downto 24);
+         ELSIF ((pres_state=569)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(23 downto 22);
+         ELSIF ((pres_state=570)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(21 downto 20);
+         ELSIF ((pres_state=571)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(19 downto 18);
+         ELSIF ((pres_state=572)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(17 downto 16);
+         ELSIF ((pres_state=573)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(15 downto 14);
+         ELSIF ((pres_state=574)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(13 downto 12);
+         ELSIF ((pres_state=575)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(11 downto 10);
+         ELSIF ((pres_state=576)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(9 downto 8);
+         ELSIF ((pres_state=577)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(7 downto 6);
+         ELSIF ((pres_state=578)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(5 downto 4);
+         ELSIF ((pres_state=579)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(3 downto 2);
+         ELSIF ((pres_state=580)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(1 downto 0);
+            receiving_register(0 downto 0) <= std_logic_vector'("0");
+         ELSIF ((pres_state=581)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= parity_addr(1 downto 0);
+         ELSIF ((pres_state=582)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=583) AND
+                (s_active(0 DOWNTO 0)=std_logic_vector'("1"))) THEN 
+            next_state<=pres_state_plus_1;
+            m_active_register(0 downto 0) <= std_logic_vector'("0");
+            reset_parity_register(0 downto 0) <= std_logic_vector'("1");
+         ELSIF ((pres_state=584)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=585)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=586)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=587)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=588)) THEN 
+            next_state<=pres_state_plus_1;
          ELSIF ((pres_state=589)) THEN 
             next_state<=pres_state_plus_1;
          ELSIF ((pres_state=590)) THEN 
@@ -2747,155 +2669,60 @@ BEGIN
             next_state<=pres_state_plus_1;
          ELSIF ((pres_state=594)) THEN 
             next_state<=pres_state_plus_1;
-            imm12_data_register(11 downto 0) <= s_data(0) & s_data(1) &
+         ELSIF ((pres_state=595)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=596)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=597)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=598)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=599)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=600)) THEN 
+            next_state<=pres_state_plus_1;
+            load_result_register(31 downto 0) <= s_data(0) & s_data(0) &
                   FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
                   FIFO_s_data(2)(0) & FIFO_s_data(2)(1) &
                   FIFO_s_data(3)(0) & FIFO_s_data(3)(1) &
                   FIFO_s_data(4)(0) & FIFO_s_data(4)(1) &
-                  FIFO_s_data(5)(0) & FIFO_s_data(5)(1);
-            op2_alt_register(31 downto 0) <= L_immediate(31 downto 0);
-            execution_type_register(0 downto 0) <= std_logic_vector'("1");
-            execution_enable_register(0 downto 0) <= std_logic_vector'("1");
-         ELSIF ((pres_state=595)) THEN 
-            next_state<=pres_state_plus_1;
-            execution_enable_register(0 downto 0) <= std_logic_vector'("0");
-            com_enable_register(0 downto 0) <= std_logic_vector'("0");
-         ELSIF ((pres_state=596)) THEN 
-            next_state<=pres_state_plus_1;
-            com_enable_register(0 downto 0) <= std_logic_vector'("1");
-            m_active_register(0 downto 0) <= std_logic_vector'("1");
-            internal_addr_register(1 downto 0) <= std_logic_vector'("10");
-         ELSIF ((pres_state=597)) THEN 
-            next_state<=pres_state_plus_1;
-            receiving_register(0 downto 0) <= std_logic_vector'("1");
-            internal_addr_register(1 downto 0) <= reversed_result_bus(31 downto 30);
-         ELSIF ((pres_state=598)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(29 downto 28);
-         ELSIF ((pres_state=599)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(27 downto 26);
-         ELSIF ((pres_state=600)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(25 downto 24);
-         ELSIF ((pres_state=601)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(23 downto 22);
-         ELSIF ((pres_state=602)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(21 downto 20);
-         ELSIF ((pres_state=603)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(19 downto 18);
-         ELSIF ((pres_state=604)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(17 downto 16);
-         ELSIF ((pres_state=605)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(15 downto 14);
-         ELSIF ((pres_state=606)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(13 downto 12);
-         ELSIF ((pres_state=607)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(11 downto 10);
-         ELSIF ((pres_state=608)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(9 downto 8);
-         ELSIF ((pres_state=609)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(7 downto 6);
-         ELSIF ((pres_state=610)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(5 downto 4);
-         ELSIF ((pres_state=611)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(3 downto 2);
-         ELSIF ((pres_state=612)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(1 downto 0);
-            receiving_register(0 downto 0) <= std_logic_vector'("0");
-         ELSIF ((pres_state=613)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= parity_addr(1 downto 0);
-         ELSIF ((pres_state=614) AND
-                (s_active(0 DOWNTO 0)=std_logic_vector'("1"))) THEN 
-            next_state<=pres_state_plus_1;
-            m_active_register(0 downto 0) <= std_logic_vector'("0");
-            reset_parity_register(0 downto 0) <= std_logic_vector'("1");
-         ELSIF ((pres_state=615)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=616)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=617)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=618)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=619)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=620)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=621)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=622)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=623)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=624)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=625)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=626)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=627)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=628)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=629)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=630)) THEN 
-            next_state<=pres_state_plus_1;
-            load_result_register(31 downto 0) <= s_data(1 downto 0) & 
-                  FIFO_s_data(1)(1 downto 0) & 
-                  FIFO_s_data(2)(1 downto 0) & 
-                  FIFO_s_data(3)(1 downto 0) & 
-                  FIFO_s_data(4)(1 downto 0) & 
-                  FIFO_s_data(5)(1 downto 0) & 
-                  FIFO_s_data(6)(1 downto 0) & 
-                  FIFO_s_data(7)(1 downto 0) & 
-                  FIFO_s_data(8)(1 downto 0) & 
-                  FIFO_s_data(9)(1 downto 0) & 
-                  FIFO_s_data(10)(1 downto 0) & 
-                  FIFO_s_data(11)(1 downto 0) & 
-                  FIFO_s_data(12)(1 downto 0) & 
-                  FIFO_s_data(13)(1 downto 0) & 
-                  FIFO_s_data(14)(1 downto 0) & 
-                  FIFO_s_data(15)(1 downto 0);
+                  FIFO_s_data(5)(0) & FIFO_s_data(5)(1) &
+                  FIFO_s_data(6)(0) & FIFO_s_data(6)(1) &
+                  FIFO_s_data(7)(0) & FIFO_s_data(7)(1) &
+                  FIFO_s_data(8)(0) & FIFO_s_data(8)(1) &
+                  FIFO_s_data(9)(0) & FIFO_s_data(9)(1) &
+                  FIFO_s_data(10)(0) & FIFO_s_data(10)(1) &
+                  FIFO_s_data(11)(0) & FIFO_s_data(11)(1) &
+                  FIFO_s_data(12)(0) & FIFO_s_data(12)(1) &
+                  FIFO_s_data(13)(0) & FIFO_s_data(13)(1) &
+                  FIFO_s_data(14)(0) & FIFO_s_data(14)(1) &
+                  FIFO_s_data(15)(0) & FIFO_s_data(15)(1);
             result_select_register(2 downto 0) <= std_logic_vector'("100");
             load_writeback_enable_register(0 downto 0) <= std_logic_vector'("1");
             result_ready_decode_register(0 downto 0) <= std_logic_vector'("1");
-            go_register(1 downto 0) <= std_logic_vector'("10");
             pc_sel_register(2 downto 0) <= std_logic_vector'("000");
-         ELSIF ((pres_state=631)) THEN 
+         ELSIF ((pres_state=601)) THEN 
             next_state<=0;
             load_writeback_enable_register(0 downto 0) <= std_logic_vector'("0");
             result_ready_decode_register(0 downto 0) <= std_logic_vector'("0");
             com_enable_register(0 downto 0) <= std_logic_vector'("0");
-            go_register(1 downto 0) <= std_logic_vector'("00");
             pc_sel_register(2 downto 0) <= std_logic_vector'("001");
-         ELSIF ((pres_state=614) AND
+         ELSIF ((pres_state=583) AND
                 (s_active(0 DOWNTO 0)=std_logic_vector'("0"))) THEN 
             next_state<=1;
               next_state <= 0;  
              m_active_register(0 downto 0) <= std_logic_vector'("0");
             reset_parity_register(0 downto 0) <= std_logic_vector'("1");
             com_enable_register(0 downto 0) <= std_logic_vector'("0");
-         ELSIF ((pres_state=586) AND
-                (s_data(1 DOWNTO 1)=std_logic_vector'("1"))) THEN 
-            next_state<=632;
-         ELSIF ((pres_state=632)) THEN 
+         ELSIF ((pres_state=411) AND
+                (s_data(1 DOWNTO 0)=std_logic_vector'("01"))) THEN 
+            next_state<=602;
+         ELSIF ((pres_state=602) AND
+                (s_data(1 DOWNTO 1)=std_logic_vector'("0"))) THEN 
             next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=633)) THEN 
+         ELSIF ((pres_state=603)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=604)) THEN 
             next_state<=pres_state_plus_1;
             rs_sel_register(1 downto 0) <= std_logic_vector'("10");
             rs1_data_register(4 downto 0) <= s_data(0) & s_data(1) &
@@ -2904,6 +2731,101 @@ BEGIN
             alu_ctrl_register(2 downto 0) <= std_logic_vector'("000");
             alu_funct_register(0 downto 0) <= std_logic_vector'("0");
             result_select_register(2 downto 0) <= std_logic_vector'("001");
+         ELSIF ((pres_state=605)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=606)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=607)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=608)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=609)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=610)) THEN 
+            next_state<=pres_state_plus_1;
+            imm12_data_register(11 downto 0) <= s_data(0) & s_data(1) &
+                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
+                  FIFO_s_data(2)(0) & FIFO_s_data(2)(1) &
+                  FIFO_s_data(3)(0) & FIFO_s_data(3)(1) &
+                  FIFO_s_data(4)(0) & FIFO_s_data(4)(1) &
+                  FIFO_s_data(5)(0) & FIFO_s_data(5)(1);
+            execution_type_register(0 downto 0) <= std_logic_vector'("1");
+            execution_enable_register(0 downto 0) <= std_logic_vector'("1");
+         ELSIF ((pres_state=611)) THEN 
+            next_state<=pres_state_plus_1;
+            op2_alt_register(31 downto 0) <= L_immediate(31 downto 0);
+            execution_enable_register(0 downto 0) <= std_logic_vector'("0");
+            com_enable_register(0 downto 0) <= std_logic_vector'("0");
+         ELSIF ((pres_state=612)) THEN 
+            next_state<=pres_state_plus_1;
+            reset_parity_register(0 downto 0) <= std_logic_vector'("0");
+            com_enable_register(0 downto 0) <= std_logic_vector'("1");
+            m_active_register(0 downto 0) <= std_logic_vector'("1");
+            internal_addr_register(1 downto 0) <= std_logic_vector'("10");
+         ELSIF ((pres_state=613)) THEN 
+            next_state<=pres_state_plus_1;
+            receiving_register(0 downto 0) <= std_logic_vector'("1");
+            internal_addr_register(1 downto 0) <= reversed_result_bus(31 downto 30);
+         ELSIF ((pres_state=614)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(29 downto 28);
+         ELSIF ((pres_state=615)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(27 downto 26);
+         ELSIF ((pres_state=616)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(25 downto 24);
+         ELSIF ((pres_state=617)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(23 downto 22);
+         ELSIF ((pres_state=618)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(21 downto 20);
+         ELSIF ((pres_state=619)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(19 downto 18);
+         ELSIF ((pres_state=620)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(17 downto 16);
+         ELSIF ((pres_state=621)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(15 downto 14);
+         ELSIF ((pres_state=622)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(13 downto 12);
+         ELSIF ((pres_state=623)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(11 downto 10);
+         ELSIF ((pres_state=624)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(9 downto 8);
+         ELSIF ((pres_state=625)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(7 downto 6);
+         ELSIF ((pres_state=626)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(5 downto 4);
+         ELSIF ((pres_state=627)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(3 downto 2);
+         ELSIF ((pres_state=628)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= reversed_result_bus(1 downto 0);
+            receiving_register(0 downto 0) <= std_logic_vector'("0");
+         ELSIF ((pres_state=629)) THEN 
+            next_state<=pres_state_plus_1;
+            internal_addr_register(1 downto 0) <= parity_addr(1 downto 0);
+         ELSIF ((pres_state=630)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=631) AND
+                (s_active(0 DOWNTO 0)=std_logic_vector'("1"))) THEN 
+            next_state<=pres_state_plus_1;
+            m_active_register(0 downto 0) <= std_logic_vector'("0");
+            reset_parity_register(0 downto 0) <= std_logic_vector'("1");
+         ELSIF ((pres_state=632)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=633)) THEN 
+            next_state<=pres_state_plus_1;
          ELSIF ((pres_state=634)) THEN 
             next_state<=pres_state_plus_1;
          ELSIF ((pres_state=635)) THEN 
@@ -2916,82 +2838,79 @@ BEGIN
             next_state<=pres_state_plus_1;
          ELSIF ((pres_state=639)) THEN 
             next_state<=pres_state_plus_1;
-            op2_alt_register(31 downto 0) <= std_logic_vector'("00000000000000000000") &
-                  s_data(0) & s_data(1) &
+         ELSIF ((pres_state=640)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=641)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=642)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=643)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=644)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=645)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=646)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=647)) THEN 
+            next_state<=pres_state_plus_1;
+         ELSIF ((pres_state=648)) THEN 
+            next_state<=pres_state_plus_1;
+            load_result_register(31 downto 0) <= s_data(0) & s_data(0) &
                   FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
                   FIFO_s_data(2)(0) & FIFO_s_data(2)(1) &
                   FIFO_s_data(3)(0) & FIFO_s_data(3)(1) &
                   FIFO_s_data(4)(0) & FIFO_s_data(4)(1) &
-                  FIFO_s_data(5)(0) & FIFO_s_data(5)(1);
-            execution_type_register(0 downto 0) <= std_logic_vector'("1");
-            execution_enable_register(0 downto 0) <= std_logic_vector'("1");
-         ELSIF ((pres_state=640)) THEN 
-            next_state<=pres_state_plus_1;
-            execution_enable_register(0 downto 0) <= std_logic_vector'("0");
-            com_enable_register(0 downto 0) <= std_logic_vector'("0");
-         ELSIF ((pres_state=641)) THEN 
-            next_state<=pres_state_plus_1;
-            com_enable_register(0 downto 0) <= std_logic_vector'("1");
-            m_active_register(0 downto 0) <= std_logic_vector'("1");
-            internal_addr_register(1 downto 0) <= std_logic_vector'("10");
-         ELSIF ((pres_state=642)) THEN 
-            next_state<=pres_state_plus_1;
-            receiving_register(0 downto 0) <= std_logic_vector'("1");
-            internal_addr_register(1 downto 0) <= reversed_result_bus(31 downto 30);
-         ELSIF ((pres_state=643)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(29 downto 28);
-         ELSIF ((pres_state=644)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(27 downto 26);
-         ELSIF ((pres_state=645)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(25 downto 24);
-         ELSIF ((pres_state=646)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(23 downto 22);
-         ELSIF ((pres_state=647)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(21 downto 20);
-         ELSIF ((pres_state=648)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(19 downto 18);
+                  FIFO_s_data(5)(0) & FIFO_s_data(5)(1) &
+                  FIFO_s_data(6)(0) & FIFO_s_data(6)(1) &
+                  FIFO_s_data(7)(0) & FIFO_s_data(7)(1) &
+                  FIFO_s_data(8)(0) & FIFO_s_data(8)(1) &
+                  FIFO_s_data(9)(0) & FIFO_s_data(9)(1) &
+                  FIFO_s_data(10)(0) & FIFO_s_data(10)(1) &
+                  FIFO_s_data(11)(0) & FIFO_s_data(11)(1) &
+                  FIFO_s_data(12)(0) & FIFO_s_data(12)(1) &
+                  FIFO_s_data(13)(0) & FIFO_s_data(13)(1) &
+                  FIFO_s_data(14)(0) & FIFO_s_data(14)(1) &
+                  FIFO_s_data(15)(0) & FIFO_s_data(15)(1);
+            result_select_register(2 downto 0) <= std_logic_vector'("100");
+            load_writeback_enable_register(0 downto 0) <= std_logic_vector'("1");
+            result_ready_decode_register(0 downto 0) <= std_logic_vector'("1");
+            pc_sel_register(2 downto 0) <= std_logic_vector'("000");
          ELSIF ((pres_state=649)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(17 downto 16);
+            next_state<=0;
+            load_writeback_enable_register(0 downto 0) <= std_logic_vector'("0");
+            result_ready_decode_register(0 downto 0) <= std_logic_vector'("0");
+            com_enable_register(0 downto 0) <= std_logic_vector'("0");
+            pc_sel_register(2 downto 0) <= std_logic_vector'("001");
+         ELSIF ((pres_state=631) AND
+                (s_active(0 DOWNTO 0)=std_logic_vector'("0"))) THEN 
+            next_state<=1;
+              next_state <= 0;  
+             m_active_register(0 downto 0) <= std_logic_vector'("0");
+            reset_parity_register(0 downto 0) <= std_logic_vector'("1");
+            com_enable_register(0 downto 0) <= std_logic_vector'("0");
+         ELSIF ((pres_state=23)) THEN 
+            next_state<=650;
          ELSIF ((pres_state=650)) THEN 
             next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(15 downto 14);
          ELSIF ((pres_state=651)) THEN 
             next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(13 downto 12);
          ELSIF ((pres_state=652)) THEN 
             next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(11 downto 10);
          ELSIF ((pres_state=653)) THEN 
             next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(9 downto 8);
          ELSIF ((pres_state=654)) THEN 
             next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(7 downto 6);
          ELSIF ((pres_state=655)) THEN 
             next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(5 downto 4);
          ELSIF ((pres_state=656)) THEN 
             next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(3 downto 2);
          ELSIF ((pres_state=657)) THEN 
             next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(1 downto 0);
-            receiving_register(0 downto 0) <= std_logic_vector'("0");
          ELSIF ((pres_state=658)) THEN 
             next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= parity_addr(1 downto 0);
-         ELSIF ((pres_state=659) AND
-                (s_active(0 DOWNTO 0)=std_logic_vector'("1"))) THEN 
+         ELSIF ((pres_state=659)) THEN 
             next_state<=pres_state_plus_1;
-            m_active_register(0 downto 0) <= std_logic_vector'("0");
-            reset_parity_register(0 downto 0) <= std_logic_vector'("1");
          ELSIF ((pres_state=660)) THEN 
             next_state<=pres_state_plus_1;
          ELSIF ((pres_state=661)) THEN 
@@ -3001,267 +2920,6 @@ BEGIN
          ELSIF ((pres_state=663)) THEN 
             next_state<=pres_state_plus_1;
          ELSIF ((pres_state=664)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=665)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=666)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=667)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=668)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=669)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=670)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=671)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=672)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=673)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=674)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=675)) THEN 
-            next_state<=pres_state_plus_1;
-            load_result_register(31 downto 0) <= s_data(1 downto 0) & 
-                  FIFO_s_data(1)(1 downto 0) & 
-                  FIFO_s_data(2)(1 downto 0) & 
-                  FIFO_s_data(3)(1 downto 0) & 
-                  FIFO_s_data(4)(1 downto 0) & 
-                  FIFO_s_data(5)(1 downto 0) & 
-                  FIFO_s_data(6)(1 downto 0) & 
-                  FIFO_s_data(7)(1 downto 0) & 
-                  FIFO_s_data(8)(1 downto 0) & 
-                  FIFO_s_data(9)(1 downto 0) & 
-                  FIFO_s_data(10)(1 downto 0) & 
-                  FIFO_s_data(11)(1 downto 0) & 
-                  FIFO_s_data(12)(1 downto 0) & 
-                  FIFO_s_data(13)(1 downto 0) & 
-                  FIFO_s_data(14)(1 downto 0) & 
-                  FIFO_s_data(15)(1 downto 0);
-            result_select_register(2 downto 0) <= std_logic_vector'("100");
-            load_writeback_enable_register(0 downto 0) <= std_logic_vector'("1");
-            result_ready_decode_register(0 downto 0) <= std_logic_vector'("1");
-            go_register(1 downto 0) <= std_logic_vector'("10");
-            pc_sel_register(2 downto 0) <= std_logic_vector'("000");
-         ELSIF ((pres_state=676)) THEN 
-            next_state<=0;
-            load_writeback_enable_register(0 downto 0) <= std_logic_vector'("0");
-            result_ready_decode_register(0 downto 0) <= std_logic_vector'("0");
-            com_enable_register(0 downto 0) <= std_logic_vector'("0");
-            go_register(1 downto 0) <= std_logic_vector'("00");
-            pc_sel_register(2 downto 0) <= std_logic_vector'("001");
-         ELSIF ((pres_state=659) AND
-                (s_active(0 DOWNTO 0)=std_logic_vector'("0"))) THEN 
-            next_state<=1;
-              next_state <= 0;  
-             m_active_register(0 downto 0) <= std_logic_vector'("0");
-            reset_parity_register(0 downto 0) <= std_logic_vector'("1");
-            com_enable_register(0 downto 0) <= std_logic_vector'("0");
-         ELSIF ((pres_state=494) AND
-                (s_data(1 DOWNTO 0)=std_logic_vector'("01"))) THEN 
-            next_state<=677;
-         ELSIF ((pres_state=677) AND
-                (s_data(1 DOWNTO 1)=std_logic_vector'("0"))) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=678)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=679)) THEN 
-            next_state<=pres_state_plus_1;
-            rs_sel_register(1 downto 0) <= std_logic_vector'("10");
-            rs1_data_register(4 downto 0) <= s_data(0) & s_data(1) &
-                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
-                  FIFO_s_data(2)(0);
-            alu_ctrl_register(2 downto 0) <= std_logic_vector'("000");
-            alu_funct_register(0 downto 0) <= std_logic_vector'("0");
-            result_select_register(2 downto 0) <= std_logic_vector'("001");
-         ELSIF ((pres_state=680)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=681)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=682)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=683)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=684)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=685)) THEN 
-            next_state<=pres_state_plus_1;
-            imm12_data_register(11 downto 0) <= s_data(0) & s_data(1) &
-                  FIFO_s_data(1)(0) & FIFO_s_data(1)(1) &
-                  FIFO_s_data(2)(0) & FIFO_s_data(2)(1) &
-                  FIFO_s_data(3)(0) & FIFO_s_data(3)(1) &
-                  FIFO_s_data(4)(0) & FIFO_s_data(4)(1) &
-                  FIFO_s_data(5)(0) & FIFO_s_data(5)(1);
-            op2_alt_register(31 downto 0) <= L_immediate(31 downto 0);
-            execution_type_register(0 downto 0) <= std_logic_vector'("1");
-            execution_enable_register(0 downto 0) <= std_logic_vector'("1");
-         ELSIF ((pres_state=686)) THEN 
-            next_state<=pres_state_plus_1;
-            execution_enable_register(0 downto 0) <= std_logic_vector'("0");
-            com_enable_register(0 downto 0) <= std_logic_vector'("0");
-         ELSIF ((pres_state=687)) THEN 
-            next_state<=pres_state_plus_1;
-            com_enable_register(0 downto 0) <= std_logic_vector'("1");
-            m_active_register(0 downto 0) <= std_logic_vector'("1");
-            internal_addr_register(1 downto 0) <= std_logic_vector'("10");
-         ELSIF ((pres_state=688)) THEN 
-            next_state<=pres_state_plus_1;
-            receiving_register(0 downto 0) <= std_logic_vector'("1");
-            internal_addr_register(1 downto 0) <= reversed_result_bus(31 downto 30);
-         ELSIF ((pres_state=689)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(29 downto 28);
-         ELSIF ((pres_state=690)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(27 downto 26);
-         ELSIF ((pres_state=691)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(25 downto 24);
-         ELSIF ((pres_state=692)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(23 downto 22);
-         ELSIF ((pres_state=693)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(21 downto 20);
-         ELSIF ((pres_state=694)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(19 downto 18);
-         ELSIF ((pres_state=695)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(17 downto 16);
-         ELSIF ((pres_state=696)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(15 downto 14);
-         ELSIF ((pres_state=697)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(13 downto 12);
-         ELSIF ((pres_state=698)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(11 downto 10);
-         ELSIF ((pres_state=699)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(9 downto 8);
-         ELSIF ((pres_state=700)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(7 downto 6);
-         ELSIF ((pres_state=701)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(5 downto 4);
-         ELSIF ((pres_state=702)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(3 downto 2);
-         ELSIF ((pres_state=703)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= reversed_result_bus(1 downto 0);
-            receiving_register(0 downto 0) <= std_logic_vector'("0");
-         ELSIF ((pres_state=704)) THEN 
-            next_state<=pres_state_plus_1;
-            internal_addr_register(1 downto 0) <= parity_addr(1 downto 0);
-         ELSIF ((pres_state=705) AND
-                (s_active(0 DOWNTO 0)=std_logic_vector'("1"))) THEN 
-            next_state<=pres_state_plus_1;
-            m_active_register(0 downto 0) <= std_logic_vector'("0");
-            reset_parity_register(0 downto 0) <= std_logic_vector'("1");
-         ELSIF ((pres_state=706)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=707)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=708)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=709)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=710)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=711)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=712)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=713)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=714)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=715)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=716)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=717)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=718)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=719)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=720)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=721)) THEN 
-            next_state<=pres_state_plus_1;
-            load_result_register(31 downto 0) <= s_data(1 downto 0) & 
-                  FIFO_s_data(1)(1 downto 0) & 
-                  FIFO_s_data(2)(1 downto 0) & 
-                  FIFO_s_data(3)(1 downto 0) & 
-                  FIFO_s_data(4)(1 downto 0) & 
-                  FIFO_s_data(5)(1 downto 0) & 
-                  FIFO_s_data(6)(1 downto 0) & 
-                  FIFO_s_data(7)(1 downto 0) & 
-                  FIFO_s_data(8)(1 downto 0) & 
-                  FIFO_s_data(9)(1 downto 0) & 
-                  FIFO_s_data(10)(1 downto 0) & 
-                  FIFO_s_data(11)(1 downto 0) & 
-                  FIFO_s_data(12)(1 downto 0) & 
-                  FIFO_s_data(13)(1 downto 0) & 
-                  FIFO_s_data(14)(1 downto 0) & 
-                  FIFO_s_data(15)(1 downto 0);
-            result_select_register(2 downto 0) <= std_logic_vector'("100");
-            load_writeback_enable_register(0 downto 0) <= std_logic_vector'("1");
-            result_ready_decode_register(0 downto 0) <= std_logic_vector'("1");
-            go_register(1 downto 0) <= std_logic_vector'("10");
-            pc_sel_register(2 downto 0) <= std_logic_vector'("000");
-         ELSIF ((pres_state=722)) THEN 
-            next_state<=0;
-            load_writeback_enable_register(0 downto 0) <= std_logic_vector'("0");
-            result_ready_decode_register(0 downto 0) <= std_logic_vector'("0");
-            com_enable_register(0 downto 0) <= std_logic_vector'("0");
-            go_register(1 downto 0) <= std_logic_vector'("00");
-            pc_sel_register(2 downto 0) <= std_logic_vector'("001");
-         ELSIF ((pres_state=705) AND
-                (s_active(0 DOWNTO 0)=std_logic_vector'("0"))) THEN 
-            next_state<=1;
-              next_state <= 0;  
-             m_active_register(0 downto 0) <= std_logic_vector'("0");
-            reset_parity_register(0 downto 0) <= std_logic_vector'("1");
-            com_enable_register(0 downto 0) <= std_logic_vector'("0");
-         ELSIF ((pres_state=22)) THEN 
-            next_state<=723;
-         ELSIF ((pres_state=723)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=724)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=725)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=726)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=727)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=728)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=729)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=730)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=731)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=732)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=733)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=734)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=735)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=736)) THEN 
-            next_state<=pres_state_plus_1;
-         ELSIF ((pres_state=737)) THEN 
             next_state<=0;
          ELSIF ((pres_state=21) AND
                 (s_active(0 DOWNTO 0)=std_logic_vector'("0"))) THEN 
@@ -3306,8 +2964,6 @@ BEGIN
             imm12_data_internal<=imm12_data_register;
             imm20_data_internal<=imm20_data_register;
             shift_imm_internal<=shift_imm_register;
-            succ_data_internal<=succ_data_register;
-            pred_data_internal<=pred_data_register;
             result_select_internal<=result_select_register;
             lui_result_internal<=lui_result_register;
             alu_funct_internal<=alu_funct_register;
@@ -3315,12 +2971,11 @@ BEGIN
             branch_funct_internal<=branch_funct_register;
             branch_bus_internal<=branch_bus_register;
             load_result_internal<=load_result_register;
+            store_enable_internal<=store_enable_register;
             execution_enable_internal<=execution_enable_register;
             result_ready_decode_internal<=result_ready_decode_register;
             need_writeback_internal<=need_writeback_register;
             load_writeback_enable_internal<=load_writeback_enable_register;
-            wr_reg_internal<=wr_reg_register;
-            go_internal<=go_register;
             alu_ctrl_internal<=alu_ctrl_register;
             send_clk_internal<=send_clk_register;
             execution_type_internal<=execution_type_register;
@@ -3344,8 +2999,6 @@ BEGIN
       imm12_data<=imm12_data_internal;
       imm20_data<=imm20_data_internal;
       shift_imm<=shift_imm_internal;
-      succ_data<=succ_data_internal;
-      pred_data<=pred_data_internal;
       result_select<=result_select_internal;
       lui_result<=lui_result_internal;
       alu_funct<=alu_funct_internal;
@@ -3353,12 +3006,11 @@ BEGIN
       branch_funct<=branch_funct_internal;
       branch_bus<=branch_bus_internal;
       load_result<=load_result_internal;
+      store_enable<=store_enable_internal;
       execution_enable<=execution_enable_internal;
       result_ready_decode<=result_ready_decode_internal;
       need_writeback<=need_writeback_internal;
       load_writeback_enable<=load_writeback_enable_internal;
-      wr_reg<=wr_reg_internal;
-      go<=go_internal;
       alu_ctrl<=alu_ctrl_internal;
       send_clk<=send_clk_internal;
       execution_type<=execution_type_internal;
@@ -3367,7 +3019,7 @@ BEGIN
       reset_parity<=reset_parity_internal;
       process(pres_state)
       begin
-         if (pres_state<737) then
+         if (pres_state<664) then
             pres_state_plus_1<=pres_state+1;
          else
             pres_state_plus_1<=pres_state;
@@ -3390,19 +3042,7 @@ ENTITY CiscV IS
         m_active:OUT std_logic_vector(0 downto 0);
         addr:OUT std_logic_vector(1 downto 0);
         m_data:OUT std_logic_vector(1 downto 0);
-        --clk_out:OUT std_logic_vector(0 downto 0);
-        --Temporary signals
-        rd_data_out:OUT std_logic_vector(4 downto 0);
-        rs1_data_out:OUT std_logic_vector(4 downto 0);
-        rs2_data_out:OUT std_logic_vector(4 downto 0);
-        result_bus_out:OUT std_logic_vector(31 downto 0);
-        op1_bus_out:OUT std_logic_vector(31 downto 0);
-        op2_bus_out:OUT std_logic_vector(31 downto 0);
-        op1_alt_out:OUT std_logic_vector(31 downto 0);
-        op2_alt_out:OUT std_logic_vector(31 downto 0);
-        result_select_out:OUT std_logic_vector(2 downto 0);
-        pc_out:OUT std_logic_vector(31 downto 0)
-        );
+        clk_out:OUT std_logic_vector(0 downto 0));
 END CiscV;
 
 ARCHITECTURE program OF CiscV IS
@@ -3427,13 +3067,10 @@ ARCHITECTURE program OF CiscV IS
         imm12_data:OUT std_logic_vector(11 downto 0);
         imm20_data:OUT std_logic_vector(19 downto 0);
         shift_imm:OUT std_logic_vector(4 downto 0);
-        succ_data:OUT std_logic_vector(3 downto 0);
-        pred_data:OUT std_logic_vector(3 downto 0);
         result_select:OUT std_logic_vector(2 downto 0);
         lui_result:OUT std_logic_vector(31 downto 0);
         alu_funct:OUT std_logic_vector(0 downto 0);
         pc_sel:OUT std_logic_vector(2 downto 0);
-        branch_immediate:IN std_logic_vector(31 downto 0);
         branch_funct:OUT std_logic_vector(2 downto 0);
         branch_bus:OUT std_logic_vector(31 downto 0);
         J_immediate:IN std_logic_vector(31 downto 0);
@@ -3441,12 +3078,11 @@ ARCHITECTURE program OF CiscV IS
         L_immediate:IN std_logic_vector(31 downto 0);
         load_result:OUT std_logic_vector(31 downto 0);
         store_data:IN std_logic_vector(31 downto 0);
+        store_enable:OUT std_logic_vector(0 downto 0);
         execution_enable:OUT std_logic_vector(0 downto 0);
         result_ready_decode:OUT std_logic_vector(0 downto 0);
         need_writeback:OUT std_logic_vector(0 downto 0);
         load_writeback_enable:OUT std_logic_vector(0 downto 0);
-        wr_reg:OUT std_logic_vector(0 downto 0);
-        go:OUT std_logic_vector(1 downto 0);
         alu_ctrl:OUT std_logic_vector(2 downto 0);
         pc:IN std_logic_vector(31 downto 0);
         reversed_pc:IN std_logic_vector(31 downto 0);
@@ -3477,16 +3113,12 @@ ARCHITECTURE program OF CiscV IS
    SIGNAL imm12_data: std_logic_vector(11 downto 0);
    SIGNAL imm20_data: std_logic_vector(19 downto 0);
    SIGNAL shift_imm: std_logic_vector(4 downto 0);
-   SIGNAL succ_data: std_logic_vector(3 downto 0);
-   SIGNAL pred_data: std_logic_vector(3 downto 0);
    SIGNAL result_select: std_logic_vector(2 downto 0);
    SIGNAL alu_result: std_logic_vector(31 downto 0);
    SIGNAL lui_result: std_logic_vector(31 downto 0);
    SIGNAL alu_funct: std_logic_vector(0 downto 0);
    SIGNAL pc_sel: std_logic_vector(2 downto 0);
    SIGNAL last_pc_sel: std_logic_vector(2 downto 0);
-   SIGNAL last_wr_reg: std_logic_vector(0 downto 0);
-   SIGNAL last_result_select: std_logic_vector(2 downto 0);
    SIGNAL branch_immediate: std_logic_vector(31 downto 0);
    SIGNAL branch_funct: std_logic_vector(2 downto 0);
    SIGNAL branch_bus: std_logic_vector(31 downto 0);
@@ -3495,7 +3127,6 @@ ARCHITECTURE program OF CiscV IS
    SIGNAL S_immediate: std_logic_vector(31 downto 0);
    SIGNAL L_immediate: std_logic_vector(31 downto 0);
    SIGNAL load_result: std_logic_vector(31 downto 0);
-   SIGNAL ack_received: std_logic_vector(0 downto 0);
    SIGNAL store_data: std_logic_vector(31 downto 0);
    SIGNAL store_enable: std_logic_vector(0 downto 0);
    SIGNAL execution_enable: std_logic_vector(0 downto 0);
@@ -3513,10 +3144,9 @@ ARCHITECTURE program OF CiscV IS
    SIGNAL writeback_enable_reset: std_logic_vector(0 downto 0);
    SIGNAL load_writeback_enable: std_logic_vector(0 downto 0);
    SIGNAL load_writeback_enable_buffer: std_logic_vector(0 downto 0);
+   SIGNAL load_writeback_enable_buffer2: std_logic_vector(0 downto 0);
    SIGNAL load_writeback_enable_reset: std_logic_vector(0 downto 0);
-   SIGNAL reset_control_signals: std_logic_vector(0 downto 0);
-   SIGNAL wr_reg: std_logic_vector(0 downto 0);
-   SIGNAL go: std_logic_vector(1 downto 0);
+   SIGNAL load_writeback_enable_reset2: std_logic_vector(0 downto 0);
    SIGNAL alu_ctrl: std_logic_vector(2 downto 0);
    SIGNAL pc: std_logic_vector(31 downto 0);
    SIGNAL reversed_pc: std_logic_vector(31 downto 0);
@@ -3545,24 +3175,14 @@ BEGIN
                   ("00000000000000000000" & imm12_data(11 downto 0));
    addr <= internal_addr;
    m_data <= internal_m_data;
-   --send_clock: process(clk, send_clk)
-   --begin
-      --if send_clk = "1" then
-         --clk_out(0) <= clk;
-      --end if;
-   --end process;
+   send_clock: process(clk, send_clk)
+   begin
+      if send_clk = "1" then
+         clk_out(0) <= clk;
+      end if;
+   end process;
    control_signal_handler: process(clk)
    begin
-      rd_data_out <= rd_data;
-      rs1_data_out <= rs1_data;
-      rs2_data_out <= rs2_data;
-      result_bus_out <= result_bus;
-      op1_bus_out <= op1_bus;
-      op2_bus_out <= op2_bus;
-      op1_alt_out <= op1_bus;
-      op2_alt_out <= op2_bus;
-      result_select_out <= result_select;
-      pc_out <= pc;
       if(falling_edge(clk)) then
          --exectuion control
          if execution_enable = "1" then
@@ -3595,15 +3215,22 @@ BEGIN
             writeback_enable_buffer <= "0";
          end if;
          --load writeback control
-         if load_writeback_enable = "1" then
-            load_writeback_enable_buffer <= "1";
+         if load_writeback_enable_buffer = "1" then
+            load_writeback_enable_buffer2 <= "1";
+            load_writeback_enable_reset <= "1";
          end if;
          if load_writeback_enable_reset = "1" then
             load_writeback_enable_buffer <= "0";
+            load_writeback_enable_reset <= "0";
+         end if;
+         if load_writeback_enable_reset2 = "1" then
+            load_writeback_enable_buffer2 <= "0";
+         end if;
+         if load_writeback_enable = "1" then
+            load_writeback_enable_buffer <= "1";
          end if;
       end if;
       end process;
-   --Might change if we can do it better (maybe have one pc add and have pc+pc_increment) where increment is by default 4 but otherwise set by branch (wanna move branch to execute)
    Pc_update: process(clk)
    begin
       if rising_edge(clk) then
@@ -3702,7 +3329,7 @@ BEGIN
                         else
                            branch_bool <= "0"; 
                         end if;
-                     when "110" => --unsigned? --ajajajaj (har fixat det p? laptop version???)
+                     when "110" =>
                         if(ieee.NUMERIC_STD.TO_INTEGER(ieee.NUMERIC_STD.unsigned(op1_bus)) < ieee.NUMERIC_STD.TO_INTEGER(ieee.NUMERIC_STD.unsigned(op2_bus))) then
                            branch_type <= "1";
                            branch_bool <= "1";
@@ -3801,10 +3428,12 @@ BEGIN
       if(rising_edge(clk)) then
          if(writeback_enable_reset="1") then
             writeback_enable_reset <= "0";
+            load_writeback_enable_reset2 <= "0";
          end if;
-         if(writeback_enable_buffer="1") then
+         if(writeback_enable_buffer="1" or load_writeback_enable_buffer2="1") then
             regs(conv_integer(rd_data))<=result_bus;
             writeback_enable_reset <= "1";
+            load_writeback_enable_reset2 <= "1";
          end if;
          if(sreset(0)='1') then
             for i in 0 to 31 loop
@@ -3864,13 +3493,10 @@ BEGIN
                imm12_data,
                imm20_data,
                shift_imm,
-               succ_data,
-               pred_data,
                result_select,
                lui_result,
                alu_funct,
                pc_sel,
-               branch_immediate,
                branch_funct,
                branch_bus,
                J_immediate,
@@ -3878,12 +3504,11 @@ BEGIN
                L_immediate,
                load_result,
                store_data,
+               store_enable,
                execution_enable,
                result_ready_decode,
                need_writeback,
                load_writeback_enable,
-               wr_reg,
-               go,
                alu_ctrl,
                pc,
                reversed_pc,
