@@ -3,7 +3,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 use work.dtekv_lib.all;
-use work.debug.all;
+--use work.debug.all;
 
 entity if_decode is  
   port (   clk       : in std_logic;
@@ -323,9 +323,9 @@ begin
                               decoded.operand2 <= ProgramCounter;
                               decoded.dstReg   <= Rd;
 
-            when "1110011" => printf("EBREAK\n"); abort(0);
+            when "1110011" => -- printf("EBREAK\n"); abort(0);
                               
-            when others    => printf("Unknown instruciton " & integer'image(to_integer(Opc)) & "\n"); abort(0);
+            when others    => -- printf("Unknown instruciton " & integer'image(to_integer(Opc)) & "\n"); abort(0);
           end case;
 
         end if;

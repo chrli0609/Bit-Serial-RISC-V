@@ -3177,10 +3177,13 @@ BEGIN
    m_data <= internal_m_data;
    send_clock: process(clk, send_clk)
    begin
-      if send_clk = "1" then
+      if (send_clk = "1") then
          clk_out(0) <= clk;
+      else
+         clk_out(0) <= "0";
       end if;
    end process;
+   -- clk_out(0) <= clk and send_clk
    control_signal_handler: process(clk)
    begin
       if(falling_edge(clk)) then

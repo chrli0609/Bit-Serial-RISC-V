@@ -5,7 +5,7 @@ use ieee.numeric_std.all;
 use ieee.math_real.all;
 use ieee.std_logic_misc.all;
 use work.dtekv_lib.all;
-use work.debug.all;
+--use work.debug.all;
 
 entity arbiter is
     generic(
