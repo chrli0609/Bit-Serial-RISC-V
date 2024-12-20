@@ -54,29 +54,29 @@ architecture rtl of i_cache_top is
     end component;
 
     component i_cache_control 
-        generic(
-            WORDS_LINE : integer := 4--;--8;
-        --    LINES      : integer := 8 --64
-        );
-        port(
-            -- To general interface
-            clk, rst : in  std_logic;
-    
-            -- To CPU interface 
-            addr     : in  MemoryAddress;
-            i_valid  : out std_logic;
-    
-            -- To memory interface
-            hit      : in  std_logic;
-            re       : out std_logic;
-            
-            -- To serial interface
-            complete  : in  std_logic;
-            request   : out std_logic;
-            base_addr : out MemoryAddress
-        );
+    generic(
+        WORDS_LINE : integer := 4--;--8;
+    --    LINES      : integer := 8 --64
+    );
+    port(
+        -- To general interface
+        clk, rst : in  std_logic;
+
+        -- To CPU interface 
+        addr     : in  MemoryAddress;
+        i_valid  : out std_logic;
+
+        -- To memory interface
+        hit      : in  std_logic;
+        re       : out std_logic;
+        
+        -- To serial interface
+        complete  : in  std_logic;
+        request   : out std_logic;
+        base_addr : out MemoryAddress
+    );
     end component;
-    
+    for all : i_cache_control use ENTITY work.i_cache_control(RTL);
     signal re, hit : std_logic;
 begin
     dut : i_cache_memory generic map(

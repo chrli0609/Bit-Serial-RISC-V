@@ -39,6 +39,8 @@ architecture RTL of i_cache_control is
 
     signal prevAddr : MemoryAddress;
     signal started  : std_logic;
+
+    constant ZERO : MemoryAddress := (others => '0');
 begin
     -- State Register
     process(clk, rst) begin
@@ -46,13 +48,11 @@ begin
             state <= VALID_S;
         elsif (clk'event and clk='1') then 
             state <= nextstate;
-        else 
-            state <= IDLE_S;
         end if;
     end process;
 
     -- Next state logic
-    process(clk, rst, hit, addr, complete, state, nextstate, prevAddr) begin
+    process(hit, addr, complete, state, nextstate, prevAddr) begin
         case state is
             when IDLE_S => 
                 if (started = '0') then
@@ -63,6 +63,8 @@ begin
                     else
                         nextstate <= IDLE_S;
                     end if;
+		else
+		  nextstate <= state;
                 end if;
             when VALID_S =>  
                 if (hit = '1' and (addr /= prevAddr or started = '1')) then
@@ -85,7 +87,7 @@ begin
     end process;
 
     -- Output logic
-    process(clk, rst, state, started, complete) begin
+    process(state, started, complete, addr,hit) begin
         case state is
             when IDLE_S =>
                 i_valid <= '0';
@@ -102,7 +104,7 @@ begin
                 re <= '0';
                 request <= not complete;
                 --base_addr <= (addr(AddressWidth-1 downto offsetSize+1), others => '0');
-                base_addr <= addr(AddressWidth-1 downto offsetSize + 2) & (offsetSize + 1 downto 0 => '0');
+                base_addr <= addr(AddressWidth-1 downto offsetSize + 2) & ZERO(offsetSize + 1 downto 0);
             when others =>
                 i_valid <= '0';
                 re <= '0';

@@ -25,14 +25,15 @@ set_db operating_condition $OPERATING_CONDITION
 #read_hdl -vhdl ../../source/brisc/program_package.vhdl
 #read_hdl -vhdl ../../source/brisc/CiscV.vhdl
 
-read_hdl -vhdl $FILE_LIST
 
-#read_hdl -vhdl ../../source/
+read_hdl -vhdl $FILE_LIST
+#read_hdl $FILE_LIST
 
 
 
 set_db hdl_error_on_blackbox 1
 set_db hdl_error_on_latch 1
+
 
 elaborate $DESIGN
 
@@ -55,7 +56,7 @@ set_clock_uncertainty -hold 0.2 [get_clocks CLK]
 
 #Asynchronous reset signals
 #set_false_path -from [get_ports resetn] 
-set_false_path -from [get_ports sreset] 
+set_false_path -from [get_ports rst] 
 
 #Output constraints
 #Set output delays

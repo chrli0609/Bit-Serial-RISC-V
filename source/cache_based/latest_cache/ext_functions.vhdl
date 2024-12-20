@@ -18,6 +18,7 @@ package body ext_functions is
     -- end function;
 
     function f_log2 (x : integer) return integer is
+    begin
     case x is
         when 1   => return 1;
         when 2   => return 1;
@@ -29,6 +30,7 @@ package body ext_functions is
         when 128 => return 7;
         when 256 => return 8;
         when 512 => return 9;
+	when others => return 1;
     end case;
 
     end function;
