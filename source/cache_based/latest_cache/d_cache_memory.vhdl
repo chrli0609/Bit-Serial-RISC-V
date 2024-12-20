@@ -118,11 +118,15 @@ begin
                 when others => temp_data_out := memory(to_integer(cpu_index), to_integer(cpu_offset));
             end case;
             cpu_data_out <= temp_data_out;
-            bs_data_out <= X"00000000";
+            bs_data_out  <= X"00000000";
         elsif (bs_re = '1') then
             temp_data_out := X"00000000";
-            bs_data_out  <= memory(to_integer(bs_index), to_integer(bs_offset));
-            cpu_data_out <=  X"00000000";
+            bs_data_out   <= memory(to_integer(bs_index), to_integer(bs_offset));
+            cpu_data_out  <= X"00000000";
+        else
+            temp_data_out := X"00000000";
+            bs_data_out   <= X"00000000";
+            cpu_data_out  <= X"00000000";
         end if;
     end process;
 end;
