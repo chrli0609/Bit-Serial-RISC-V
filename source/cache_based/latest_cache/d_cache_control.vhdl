@@ -2,7 +2,8 @@ library ieee;
 
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
-use ieee.math_real.all;
+--use ieee.math_real.all;
+use work.ext_functions.all;
 use work.dtekv_lib.all;
 --use work.debug.all;
 -- OPTIMIZATION: THE BASE ADDRESS FIELD CAN BE REDUCED TO ELIMINATE THE ZEROS
@@ -35,7 +36,7 @@ entity d_cache_control is
 end;
 
 architecture RTL of d_cache_control is
-    constant offsetSize : integer := integer(ceil(log2(real(WORDS_LINE))));
+    constant offsetSize : integer := f_log2(WORDS_LINE);
     
     type dCacheState_T is (IDLE_S, MISS_DIRTY_S, MISS_CLEAN_S, 
         HIT_READ_S, HIT_WRITE_S);

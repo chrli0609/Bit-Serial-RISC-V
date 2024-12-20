@@ -2,7 +2,8 @@ library ieee;
 
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
-use ieee.math_real.all;
+-- use ieee.math_real.all;
+use work.ext_functions.all;
 use work.dtekv_lib.all;
 --use work.debug.all;
 
@@ -37,8 +38,8 @@ entity d_cache_memory is
 end;
 
 architecture RTL of d_cache_memory is 
-    constant offsetSize : integer := integer(ceil(log2(real(WORDS_LINE))));
-    constant indexSize  : integer := integer(ceil(log2(real(LINES))));
+    constant offsetSize : integer := f_log2(WORDS_LINE);
+    constant indexSize  : integer := f_log2(LINES);
     constant tagSize    : integer := AddressWidth - offsetSize - indexSize - 2;
     constant indexIndex : integer := indexSize + offsetSize - 1 + 2;
 
