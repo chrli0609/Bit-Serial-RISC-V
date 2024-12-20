@@ -56,7 +56,8 @@ set_clock_uncertainty -hold 0.2 [get_clocks CLK]
 
 #Asynchronous reset signals
 #set_false_path -from [get_ports resetn] 
-set_false_path -from [get_ports rst] 
+set_false_path -from [get_ports reset] 
+#set_false_path -from [get_ports rst] 
 
 #Output constraints
 #Set output delays
@@ -97,19 +98,20 @@ syn_opt
 #--------------------
 
 #write out verilog netlists and constraints
-write_hdl > genus_output/$DESIGN_synth.v
-write_sdc > genus_output/$DESIGN_design.sdc
-write_script > genus_output/$DESIGN_design.genus_const.tcl
+write_hdl > genus_output/${DESIGN}_synth.v
+write_sdc > genus_output/${DESIGN}_design.sdc
+write_script > genus_output/${DESIGN}_design.genus_const.tcl
 
 # report_timing -lint -verbose
 
-report_timing > genus_output/$DESIGN_synth_timing.rpt	
-report_area   > genus_output/$DESIGN_synth_area.rpt
-report_gates  > genus_output/$DESIGN_synth_gates.rpt	
-report_power  > genus_output/$DESIGN_synth_power.rpt
+report_timing > genus_output/${DESIGN}_synth_timing.rpt	
+report_area   > genus_output/${DESIGN}_synth_area.rpt
+report_gates  > genus_output/${DESIGN}_synth_gates.rpt	
+report_power  > genus_output/${DESIGN}_synth_power.rpt
 
 puts "Final Runtime & Memory."
 timestat FINAL
-puts "=========================================="
-puts "$DESIGN Synthesis Finished ........."
-puts "=========================================="
+#puts "=========================================="
+#puts "${DESIGN} Synthesis Finished ........."
+#puts "=========================================="
+puts "==========================================\n${DESIGN} Synthesis Finished .........\n=========================================="
