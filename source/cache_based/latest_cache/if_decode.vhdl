@@ -323,9 +323,9 @@ begin
                               decoded.operand2 <= ProgramCounter;
                               decoded.dstReg   <= Rd;
 
-            when "1110011" => printf("EBREAK\n"); abort(0);
+            when "1110011" => -- printf("EBREAK\n"); abort(0);
                               
-            when others    => printf("Unknown instruciton " & integer'image(to_integer(Opc)) & "\n"); abort(0);
+            when others    => -- printf("Unknown instruciton " & integer'image(to_integer(Opc)) & "\n"); abort(0);
           end case;
 
         end if;

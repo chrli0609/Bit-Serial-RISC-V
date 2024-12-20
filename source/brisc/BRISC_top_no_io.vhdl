@@ -6,7 +6,7 @@ USE WORK.types_pkg.ALL;
 entity BRISC_top is
     port (
         clk      : in  std_logic; 
-        reset    : in std_logic_vector(0 downto 0);
+        reset    : in std_logic_vector(0 downto 0)
     );
 end entity BRISC_top;
 
