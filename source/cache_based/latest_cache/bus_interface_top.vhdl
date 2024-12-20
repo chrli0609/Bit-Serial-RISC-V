@@ -4,7 +4,7 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 use ieee.math_real.all;
 use work.dtekv_lib.all;
-use work.debug.all;
+--use work.debug.all;
 
 entity bus_interface_top is
     generic(

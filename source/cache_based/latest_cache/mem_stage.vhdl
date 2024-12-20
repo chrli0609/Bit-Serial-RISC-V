@@ -3,7 +3,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 use work.dtekv_lib.all;
-use work.debug.all;
+--use work.debug.all;
 
 entity mem_stage is  
   port (   clk       : in std_logic;

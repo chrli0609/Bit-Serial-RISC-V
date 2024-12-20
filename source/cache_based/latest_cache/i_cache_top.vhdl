@@ -3,7 +3,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 use work.dtekv_lib.all;
-use work.debug.all;
+--use work.debug.all;
 
 entity i_cache_top is
     generic(
