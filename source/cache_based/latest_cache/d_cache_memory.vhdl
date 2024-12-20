@@ -5,7 +5,7 @@ use ieee.numeric_std.all;
 -- use ieee.math_real.all;
 use work.ext_functions.all;
 use work.dtekv_lib.all;
---use work.debug.all;
+use work.debug.all;
 
 entity d_cache_memory is 
     generic(
@@ -102,12 +102,12 @@ begin
         end if;    
     end process;
 
-    process(cpu_re, bs_re, cpu_addr, cpu_index, cpu_offset, bs_addr, bs_index, bs_offset) 
+    process(cpu_re, bs_re, cpu_addr, cpu_index, cpu_offset, bs_addr, bs_index, bs_offset, cpu_byte_sel, memory) 
         variable temp_data_out : Word;
     begin
         if (cpu_re = '1') then
-            --cpu_data_out <= memory(to_integer(cpu_index), to_integer(cpu_offset));
             temp_data_out := X"00000000";
+            --cpu_data_out <= memory(to_integer(cpu_index), to_integer(cpu_offset));
             case cpu_byte_sel is
                 when "0001" => temp_data_out(7  downto 0 ) := memory(to_integer(cpu_index), to_integer(cpu_offset))(7  downto 0 );
                 when "0010" => temp_data_out(15 downto 8 ) := memory(to_integer(cpu_index), to_integer(cpu_offset))(15 downto 8 );
@@ -118,8 +118,11 @@ begin
                 when others => temp_data_out := memory(to_integer(cpu_index), to_integer(cpu_offset));
             end case;
             cpu_data_out <= temp_data_out;
+            bs_data_out <= X"00000000";
         elsif (bs_re = '1') then
+            temp_data_out := X"00000000";
             bs_data_out  <= memory(to_integer(bs_index), to_integer(bs_offset));
+            cpu_data_out <=  X"00000000";
         end if;
     end process;
 end;
