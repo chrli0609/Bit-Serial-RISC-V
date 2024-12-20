@@ -3,7 +3,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 use work.types_pkg.all;
-use IEEE.TEXTIO.ALL;
+--use IEEE.TEXTIO.ALL;
 -- use work.debug.all;
 
 entity RAM is  
@@ -19,20 +19,21 @@ end entity;
 architecture RTL of RAM is
   type memory_array is array (0 to MemLen - 1) of Word;
   signal ram : memory_array;
-  file ram_file : text open read_mode is "ram_init.bin";
+  --file ram_file : text open read_mode is "ram_init.bin";
 begin
 
-  load_ram: process
-	variable one_word : Word;
-        variable addr : integer := 0;
-    begin
-        while not endfile(ram_file) loop
-            read(ram_file, one_word);
-            ram(addr) <= one_word;
-            addr := addr + 1;
-        end loop;
-        wait;
-    end process;
+  --load_ram: process
+	--variable one_word : Word;
+      --  variable addr : integer := 0;
+    --begin
+	 
+ --       while not endfile(ram_file) loop
+ --           read(ram_file, one_word);
+ --           ram(addr) <= one_word;
+ --           addr := addr + 1;
+--        end loop;
+--        wait;
+ --   end process;
 	
   process(clk, reset)
 	variable addr : integer;
