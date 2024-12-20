@@ -3180,7 +3180,7 @@ BEGIN
       if (send_clk = "1") then
          clk_out(0) <= clk;
       else
-         clk_out(0) <= "0";
+         clk_out(0) <= '0';
       end if;
    end process;
    -- clk_out(0) <= clk and send_clk
