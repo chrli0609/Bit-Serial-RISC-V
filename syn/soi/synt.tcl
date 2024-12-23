@@ -26,8 +26,8 @@ set_db operating_condition $OPERATING_CONDITION
 #read_hdl -vhdl ../../source/brisc/CiscV.vhdl
 
 
-read_hdl -vhdl $FILE_LIST
-#read_hdl $FILE_LIST
+#read_hdl -vhdl $FILE_LIST
+read_hdl $FILE_LIST
 
 
 
@@ -56,8 +56,9 @@ set_clock_uncertainty -hold 0.2 [get_clocks CLK]
 
 #Asynchronous reset signals
 #set_false_path -from [get_ports resetn] 
-set_false_path -from [get_ports reset] 
+#set_false_path -from [get_ports reset] 
 #set_false_path -from [get_ports rst] 
+set_false_path -from [get_ports i_rst] 
 
 #Output constraints
 #Set output delays
