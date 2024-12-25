@@ -26,8 +26,28 @@ set_db operating_condition $OPERATING_CONDITION
 #read_hdl -vhdl ../../source/brisc/CiscV.vhdl
 
 
-read_hdl -vhdl $FILE_LIST
+#read_hdl -vhdl $FILE_LIST
 #read_hdl $FILE_LIST
+
+
+
+foreach rtl_file $FILE_LIST {
+	set nameDotTypeList [split $rtl_file "."]
+	set filetype [lindex $nameDotTypeList 1]
+	puts "----- filetype is: $filetype ------ "
+	if {$filetype == "v"} {
+	read_hdl $rtl_file
+	} else {
+	read_hdl -vhdl $rtl_file
+	}
+}
+
+
+#for {set i 0} {$i < llength $FILE_LIST} {incr i}{
+#	puts "value of i: $i"
+#	if {lindex $FILE_LIST $i }
+#	read_hdl
+#}
 
 
 
@@ -56,8 +76,12 @@ set_clock_uncertainty -hold 0.2 [get_clocks CLK]
 
 #Asynchronous reset signals
 #set_false_path -from [get_ports resetn] 
-set_false_path -from [get_ports reset] 
+#set_false_path -from [get_ports reset] 
 #set_false_path -from [get_ports rst] 
+#set_false_path -from [get_ports i_rst] 
+#
+#
+set_false_path -from [get_ports $RESET_SIGNAL] 
 
 #Output constraints
 #Set output delays

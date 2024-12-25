@@ -26,6 +26,8 @@ set FILE_LIST {program_package.vhdl types_pkg.vhd CiscV.vhdl bs_interface.vhd BR
 
 set DESIGN       BRISC_top
 #set DESIGN       CiscV
+
+set RESET_SIGNAL reset
 set THE_DATE  [exec date +%m%d.%H%M]
 
 # *********************************************************

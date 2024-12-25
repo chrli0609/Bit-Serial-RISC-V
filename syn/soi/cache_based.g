@@ -19,13 +19,6 @@ set LIBRARY  {KISTA_SOI_STDLIB2_CCS_TT.lib}
 set OPERATING_CONDITION {PVT_1P8V_25C}
 
 
-#set FILE_LIST {RISC_V_Cached.vhdl          cache_bypass_control.vhdl   dtekv_top_nocache.vhdl      mem_stage.vhdl
-#RV_tb.vhdl                  cache_bypass_top.vhdl       exec_mem.vhdl               no_d_cache.vhdl
-#arbiter.vhdl                d_cache_control.vhdl        hazardunit.vhdl             no_i_cache.vhdl
-#bs_interface_master.vhd     d_cache_memory.vhdl         i_cache_control.vhdl        priority_cycle_module.vhdl
-#bs_interface_slave.vhd      d_cache_top.vhdl            i_cache_memory.vhdl         round_robin_module.vhdl
-#bs_interface_tb.vhd         debug.vhdl                  i_cache_top.vhdl            types_pkg.vhd
-#bs_protocol.vhd             dtekv_lib.vhdl              if_decode.vhdl              writeback.vhdl}
 
 
 
@@ -35,7 +28,6 @@ bus_interface_top.vhdl i_cache_memory.vhdl   priority_cycle_module.vhdl
 cache_bypass_control.vhdl           i_cache_top.vhdl      round_robin_module.vhdl
 cache_bypass_top.vhdl       if_decode.vhdl        writeback.vhdl dtekv_top_nocache.vhdl RISC_V_Cached.vhdl}
 
-#set FILE_LIST {dtekv_lib.vhdl ext_functions.vhdl     i_cache_control.vhdl  i_cache_memory.vhdl   i_cache_top.vhdl}
 
 
 #set SYN_EFFORT   high
@@ -43,7 +35,9 @@ cache_bypass_top.vhdl       if_decode.vhdl        writeback.vhdl dtekv_top_nocac
 
 
 set DESIGN       RISC_V_Cached
-#set DESIGN i_cache_top
+
+set RESET_SIGNAL reset
+
 set THE_DATE  [exec date +%m%d.%H%M]
 
 # *********************************************************
