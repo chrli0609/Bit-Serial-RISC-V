@@ -1,6 +1,6 @@
 ######################################################################
 
-# Created by Genus(TM) Synthesis Solution 21.19-s055_1 on Mon Dec 23 23:03:41 CET 2024
+# Created by Genus(TM) Synthesis Solution 21.19-s055_1 on Wed Dec 25 12:06:10 CET 2024
 
 # This file contains the Genus script for design:serv_synth_wrapper
 
@@ -15,13 +15,13 @@ set_db -quiet phys_use_invs_extraction true
 set_db -quiet phys_route_time_out 120.0
 set_db -quiet capacitance_per_unit_length_mmmc {}
 set_db -quiet resistance_per_unit_length_mmmc {}
-set_db -quiet runtime_by_stage {{PBS_Generic-Start 0 24 0.0 11.0} {to_generic 4 29 4 16} {first_condense 3 32 3 20} {PBS_Generic_Opt-Post 8 32 7.937768999999999 18.937769} {{PBS_Generic-Postgen HBO Optimizations} 0 32 0.0 18.937769} {PBS_TechMap-Start 0 33 0.0 19.937769} {{PBS_TechMap-Premap HBO Optimizations} 0 33 0.0 19.937769} {second_condense 1 34 2 23} {reify 3 37 4 27} {global_incr_map 0 37 1 28} {{PBS_Techmap-Global Mapping} 4 37 4.725173000000002 24.662942} {{PBS_TechMap-Datapath Postmap Operations} 2 39 1.0 25.662942} {{PBS_TechMap-Postmap HBO Optimizations} 0 39 -0.03788099999999872 25.625061000000002} {{PBS_TechMap-Postmap Clock Gating} 0 39 0.0 25.625061000000002} {{PBS_TechMap-Postmap Cleanup} 0 39 -0.03591899999999981 25.589142000000002} {PBS_Techmap-Post_MBCI 0 39 0.0 25.589142000000002} {incr_opt 3 42 3 33} }
+set_db -quiet runtime_by_stage {{PBS_Generic-Start 0 18 0.0 11.0} {to_generic 4 22 4 15} {first_condense 2 25 3 20} {PBS_Generic_Opt-Post 7 25 7.95213 18.95213} {{PBS_Generic-Postgen HBO Optimizations} 0 25 0.0 18.95213} {PBS_TechMap-Start 0 26 0.0 18.95213} {{PBS_TechMap-Premap HBO Optimizations} 0 26 0.0 18.95213} {second_condense 1 27 2 22} {reify 2 29 3 26} {global_incr_map 1 30 1 27} {{PBS_Techmap-Global Mapping} 4 30 4.7530280000000005 23.705158} {{PBS_TechMap-Datapath Postmap Operations} 1 31 1.0 24.705158} {{PBS_TechMap-Postmap HBO Optimizations} 0 31 -0.0375949999999996 24.667563} {{PBS_TechMap-Postmap Clock Gating} 0 31 0.0 24.667563} {{PBS_TechMap-Postmap Cleanup} 1 32 -0.03672000000000253 24.630843} {PBS_Techmap-Post_MBCI 0 32 0.0 24.630843} {incr_opt 3 35 3 33} }
 set_db -quiet timing_adjust_tns_of_complex_flops false
 set_db -quiet hdl_error_on_latch true
 set_db -quiet hdl_error_on_blackbox true
 set_db -quiet tinfo_tstamp_file .rs_christopher.tstamp
 set_db -quiet metric_enable true
-set_db -quiet flow_metrics_snapshot_uuid b342af89-2fef-47ca-9d66-780cfdd7206e
+set_db -quiet flow_metrics_snapshot_uuid c6fe0ec1-16c2-4f4a-8726-8f77c8123859
 set_db -quiet phys_use_segment_parasitics true
 set_db -quiet probabilistic_extraction true
 set_db -quiet ple_correlation_factors {1.9000 2.0000}
@@ -836,10 +836,10 @@ set_db -quiet dft_scan_style muxed_scan
 set_db -quiet dft_scanbit_waveform_analysis false
 # END DFT SECTION
 set_db -quiet design:serv_synth_wrapper .seq_reason_deleted_internal {{cpu/decode/imm25 unloaded cpu/decode/imm25} {rf_ram_if/rgate_reg unloaded rf_ram_if/rgate}}
-set_db -quiet design:serv_synth_wrapper .qos_by_stage {{to_generic {wns -11111111} {tns -111111111} {vep -111111111} {area 1936889} {cell_count 1033} {utilization  0.00} {runtime 4 29 4 16} }{first_condense {wns -11111111} {tns -111111111} {vep -111111111} {area 1942481} {cell_count 1115} {utilization  0.00} {runtime 3 32 3 20} }{second_condense {wns -11111111} {tns -111111111} {vep -111111111} {area 1934403} {cell_count 1105} {utilization  0.00} {runtime 1 34 2 23} }{reify {wns 72823} {tns 0} {vep 0} {area 1508640} {cell_count 1184} {utilization  0.00} {runtime 3 37 4 27} }{global_incr_map {wns 72858} {tns 0} {vep 0} {area 1505440} {cell_count 1184} {utilization  0.00} {runtime 0 37 1 28} }{incr_opt {wns 214748365} {tns 0} {vep 0} {area 1519520} {cell_count 1176} {utilization  0.00} {runtime 3 42 3 33} }}
+set_db -quiet design:serv_synth_wrapper .qos_by_stage {{to_generic {wns -11111111} {tns -111111111} {vep -111111111} {area 1936889} {cell_count 1033} {utilization  0.00} {runtime 4 22 4 15} }{first_condense {wns -11111111} {tns -111111111} {vep -111111111} {area 1942481} {cell_count 1115} {utilization  0.00} {runtime 2 25 3 20} }{second_condense {wns -11111111} {tns -111111111} {vep -111111111} {area 1934403} {cell_count 1105} {utilization  0.00} {runtime 1 27 2 22} }{reify {wns 72823} {tns 0} {vep 0} {area 1508640} {cell_count 1184} {utilization  0.00} {runtime 2 29 3 26} }{global_incr_map {wns 72858} {tns 0} {vep 0} {area 1505440} {cell_count 1184} {utilization  0.00} {runtime 1 30 1 27} }{incr_opt {wns 214748365} {tns 0} {vep 0} {area 1519520} {cell_count 1176} {utilization  0.00} {runtime 3 35 3 33} }}
 set_db -quiet design:serv_synth_wrapper .seq_mbci_coverage 0.0
 set_db -quiet design:serv_synth_wrapper .hdl_user_name serv_synth_wrapper
-set_db -quiet design:serv_synth_wrapper .hdl_filelist {{default -v2001 {SYNTHESIS} {/home/christopher/Bit-Serial-RISC-V/source/serv/serv_bufreg.v /home/christopher/Bit-Serial-RISC-V/source/serv/serv_ctrl.v /home/christopher/Bit-Serial-RISC-V/source/serv/serv_decode.v /home/christopher/Bit-Serial-RISC-V/source/serv/serv_mem_if.v /home/christopher/Bit-Serial-RISC-V/source/serv/serv_alu.v /home/christopher/Bit-Serial-RISC-V/source/serv/serv_bufreg2.v /home/christopher/Bit-Serial-RISC-V/source/serv/serv_csr.v /home/christopher/Bit-Serial-RISC-V/source/serv/serv_immdec.v /home/christopher/Bit-Serial-RISC-V/source/serv/serv_rf_if.v /home/christopher/Bit-Serial-RISC-V/source/serv/serv_rf_ram_if.v /home/christopher/Bit-Serial-RISC-V/source/serv/serv_state.v /home/christopher/Bit-Serial-RISC-V/source/serv/serv_top.v /home/christopher/Bit-Serial-RISC-V/source/serv/serv_synth_wrapper.v} {/home/christopher/Bit-Serial-RISC-V/syn/soi/../../source/serv/} {}}}
+set_db -quiet design:serv_synth_wrapper .hdl_filelist {{default -v2001 {SYNTHESIS} {/home/christopher/Bit-Serial-RISC-V/source/serv/serv_bufreg.v} {/home/christopher/Bit-Serial-RISC-V/syn/soi/../../source/serv/} {}} {default -v2001 {SYNTHESIS} {/home/christopher/Bit-Serial-RISC-V/source/serv/serv_ctrl.v} {/home/christopher/Bit-Serial-RISC-V/syn/soi/../../source/serv/} {}} {default -v2001 {SYNTHESIS} {/home/christopher/Bit-Serial-RISC-V/source/serv/serv_decode.v} {/home/christopher/Bit-Serial-RISC-V/syn/soi/../../source/serv/} {}} {default -v2001 {SYNTHESIS} {/home/christopher/Bit-Serial-RISC-V/source/serv/serv_mem_if.v} {/home/christopher/Bit-Serial-RISC-V/syn/soi/../../source/serv/} {}} {default -v2001 {SYNTHESIS} {/home/christopher/Bit-Serial-RISC-V/source/serv/serv_alu.v} {/home/christopher/Bit-Serial-RISC-V/syn/soi/../../source/serv/} {}} {default -v2001 {SYNTHESIS} {/home/christopher/Bit-Serial-RISC-V/source/serv/serv_bufreg2.v} {/home/christopher/Bit-Serial-RISC-V/syn/soi/../../source/serv/} {}} {default -v2001 {SYNTHESIS} {/home/christopher/Bit-Serial-RISC-V/source/serv/serv_csr.v} {/home/christopher/Bit-Serial-RISC-V/syn/soi/../../source/serv/} {}} {default -v2001 {SYNTHESIS} {/home/christopher/Bit-Serial-RISC-V/source/serv/serv_immdec.v} {/home/christopher/Bit-Serial-RISC-V/syn/soi/../../source/serv/} {}} {default -v2001 {SYNTHESIS} {/home/christopher/Bit-Serial-RISC-V/source/serv/serv_rf_if.v} {/home/christopher/Bit-Serial-RISC-V/syn/soi/../../source/serv/} {}} {default -v2001 {SYNTHESIS} {/home/christopher/Bit-Serial-RISC-V/source/serv/serv_rf_ram_if.v} {/home/christopher/Bit-Serial-RISC-V/syn/soi/../../source/serv/} {}} {default -v2001 {SYNTHESIS} {/home/christopher/Bit-Serial-RISC-V/source/serv/serv_state.v} {/home/christopher/Bit-Serial-RISC-V/syn/soi/../../source/serv/} {}} {default -v2001 {SYNTHESIS} {/home/christopher/Bit-Serial-RISC-V/source/serv/serv_top.v} {/home/christopher/Bit-Serial-RISC-V/syn/soi/../../source/serv/} {}} {default -v2001 {SYNTHESIS} {/home/christopher/Bit-Serial-RISC-V/source/serv/serv_synth_wrapper.v} {/home/christopher/Bit-Serial-RISC-V/syn/soi/../../source/serv/} {}}}
 set_db -quiet design:serv_synth_wrapper .seq_reason_deleted {{cpu/decode/imm25 unloaded} {rf_ram_if/rgate_reg unloaded}}
 set_db -quiet design:serv_synth_wrapper .verification_directory fv/serv_synth_wrapper
 set_db -quiet design:serv_synth_wrapper .lp_clock_gating_max_flops inf
@@ -2928,7 +2928,7 @@ set_db -quiet source_verbose true
 ##
 ## Written by Genus(TM) Synthesis Solution version 21.19-s055_1
 ## flowkit v21.12-s019_1
-## Written on 23:03:42 23-Dec 2024
+## Written on 12:06:10 25-Dec 2024
 #############################################################
 #####   Flow Definitions   ##################################
 
@@ -2983,7 +2983,7 @@ if {[is_attribute flow_step_next -obj_type root]} {set_db flow_step_next {}}
 if {[is_attribute flow_working_directory -obj_type root]} {set_db flow_working_directory .}
 if {[is_attribute flow_branch -obj_type root]} {set_db flow_branch {}}
 if {[is_attribute flow_caller_data -obj_type root]} {set_db flow_caller_data {}}
-if {[is_attribute flow_metrics_snapshot_uuid -obj_type root]} {set_db flow_metrics_snapshot_uuid b342af89-2fef-47ca-9d66-780cfdd7206e}
+if {[is_attribute flow_metrics_snapshot_uuid -obj_type root]} {set_db flow_metrics_snapshot_uuid c6fe0ec1-16c2-4f4a-8726-8f77c8123859}
 if {[is_attribute flow_starting_db -obj_type root]} {set_db flow_starting_db {}}
 if {[is_attribute flow_db_directory -obj_type root]} {set_db flow_db_directory dbs}
 if {[is_attribute flow_report_directory -obj_type root]} {set_db flow_report_directory reports}
