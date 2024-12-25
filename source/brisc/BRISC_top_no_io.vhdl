@@ -3,14 +3,14 @@ use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 USE WORK.types_pkg.ALL;
 
-entity BRISC_top is
+entity BRISC_top_no_io is
     port (
         clk      : in  std_logic; 
         reset    : in std_logic_vector(0 downto 0)
     );
-end entity BRISC_top;
+end entity BRISC_top_no_io;
 
-architecture Structural of BRISC_top is
+architecture Structural of BRISC_top_no_io is
 
     -- Component Declarations
 
@@ -57,6 +57,14 @@ architecture Structural of BRISC_top is
     signal s_active_wire        : std_logic_vector(0 downto 0);
     signal s_data_wire          : unsigned(1 downto 0);
 
+
+    signal data_addr_wire_out           : MemoryAddress;
+    signal we_wire_out                  : std_logic;
+    signal data4mem_wire_out            : Word;
+    signal data2mem_wire_out            : Word;
+    signal data4io_wire_out             : Word;
+    signal data2io_wire_out             : Word;
+
 begin
 
     -- Instantiate Module1
@@ -70,12 +78,12 @@ begin
 			addr => unsigned(addr_wire),
 			s_active => s_active_wire(0),
 			rx_data => s_data_wire,
-			data_addr => data_addr_wire,
-			we => open,
-			data4mem => open,
-			data2mem => open,
-			data4io => open,
-			data2io => open
+			data_addr => data_addr_wire_out,
+			we => we_wire_out,
+			data4mem => data4mem_wire_out,
+			data2mem => data2mem_wire_out,
+			data4io => data4io_wire_out,
+			data2io => data2io_wire_out
         );
 
     U4: CiscV
