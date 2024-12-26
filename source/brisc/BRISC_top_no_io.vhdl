@@ -6,14 +6,14 @@ USE WORK.types_pkg.ALL;
 entity BRISC_top_no_io is
     port (
         clk      : in  std_logic; 
-        reset    : in std_logic_vector(0 downto 0)
+        reset    : in std_logic_vector(0 downto 0);
 
         data_addr_wire_out           : out MemoryAddress;
         we_wire_out                  : out std_logic;
         data4mem_wire_out            : out Word;
         data2mem_wire_out            : out Word;
         data4io_wire_out             : out Word;
-        data2io_wire_out             : out Word;
+        data2io_wire_out             : out Word
     );
 end entity BRISC_top_no_io;
 
