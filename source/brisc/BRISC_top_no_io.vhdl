@@ -7,6 +7,13 @@ entity BRISC_top_no_io is
     port (
         clk      : in  std_logic; 
         reset    : in std_logic_vector(0 downto 0)
+
+        data_addr_wire_out           : out MemoryAddress;
+        we_wire_out                  : out std_logic;
+        data4mem_wire_out            : out Word;
+        data2mem_wire_out            : out Word;
+        data4io_wire_out             : out Word;
+        data2io_wire_out             : out Word;
     );
 end entity BRISC_top_no_io;
 
@@ -56,14 +63,6 @@ architecture Structural of BRISC_top_no_io is
     signal addr_wire            : std_logic_vector(1 downto 0);
     signal s_active_wire        : std_logic_vector(0 downto 0);
     signal s_data_wire          : unsigned(1 downto 0);
-
-
-    signal data_addr_wire_out           : MemoryAddress;
-    signal we_wire_out                  : std_logic;
-    signal data4mem_wire_out            : Word;
-    signal data2mem_wire_out            : Word;
-    signal data4io_wire_out             : Word;
-    signal data2io_wire_out             : Word;
 
 begin
 
