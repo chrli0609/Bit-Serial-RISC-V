@@ -3286,6 +3286,8 @@ BEGIN
             for i in 0 to 31 loop
                store_data(i) <= regs(conv_integer(rs2_data))(31-i);
             end loop;
+         else
+            store_data <= (others=>'0');
          end if;
    end process;
    Final_Execution: process(clk)
