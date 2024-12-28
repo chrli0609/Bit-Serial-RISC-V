@@ -65,7 +65,7 @@ check_design -all
 #-----------------------
 
 #Clock
-create_clock -name "CLK" -add -period 100.0 [get_ports clk]
+create_clock -name "CLK" -add -period $CLOCK_PERIOD [get_ports clk]
 set_clock_latency 0.2 [get_clocks CLK]
 set_clock_uncertainty -setup 0.3 [get_clocks CLK]
 set_clock_uncertainty -hold 0.2 [get_clocks CLK]
@@ -128,10 +128,10 @@ write_script > genus_output/${DESIGN}_design.genus_const.tcl
 
 # report_timing -lint -verbose
 
-report_timing > genus_output/${DESIGN}_synth_timing.rpt	
-report_area   > genus_output/${DESIGN}_synth_area.rpt
-report_gates  > genus_output/${DESIGN}_synth_gates.rpt	
-report_power  > genus_output/${DESIGN}_synth_power.rpt
+report_timing > genus_output/${DESIGN}_synth_${CLOCK_PERIOD}_timing.rpt	
+report_area   > genus_output/${DESIGN}_synth_${CLOCK_PERIOD}_area.rpt
+report_gates  > genus_output/${DESIGN}_synth_${CLOCK_PERIOD}_gates.rpt	
+report_power  > genus_output/${DESIGN}_synth_${CLOCK_PERIOD}_power.rpt
 
 puts "Final Runtime & Memory."
 timestat FINAL

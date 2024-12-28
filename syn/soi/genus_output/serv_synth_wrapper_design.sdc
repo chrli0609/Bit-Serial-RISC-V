@@ -1,6 +1,6 @@
 # ####################################################################
 
-#  Created by Genus(TM) Synthesis Solution 21.19-s055_1 on Wed Dec 25 12:06:10 CET 2024
+#  Created by Genus(TM) Synthesis Solution 21.19-s055_1 on Sat Dec 28 21:48:27 CET 2024
 
 # ####################################################################
 
@@ -12,7 +12,7 @@ set_units -time 1000ps
 # Set the current design
 current_design serv_synth_wrapper
 
-create_clock -name "CLK" -period 100.0 -waveform {0.0 50.0} [get_ports clk]
+create_clock -name "CLK" -period 1000.0 -waveform {0.0 500.0} [get_ports clk]
 set_load -pin_load -min 0.01 [get_ports {o_ibus_adr[31]}]
 set_load -pin_load -max 0.1 [get_ports {o_ibus_adr[31]}]
 set_load -pin_load -min 0.01 [get_ports {o_ibus_adr[30]}]

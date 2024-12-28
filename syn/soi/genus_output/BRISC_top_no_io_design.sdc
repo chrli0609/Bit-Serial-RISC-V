@@ -1,6 +1,6 @@
 # ####################################################################
 
-#  Created by Genus(TM) Synthesis Solution 21.19-s055_1 on Thu Dec 26 01:29:36 CET 2024
+#  Created by Genus(TM) Synthesis Solution 21.19-s055_1 on Sat Dec 28 20:24:14 CET 2024
 
 # ####################################################################
 
@@ -12,7 +12,7 @@ set_units -time 1000ps
 # Set the current design
 current_design BRISC_top_no_io
 
-create_clock -name "CLK" -period 100.0 -waveform {0.0 50.0} [get_ports clk]
+create_clock -name "CLK" -period 1000.0 -waveform {0.0 500.0} [get_ports clk]
 set_load -pin_load -min 0.01 [get_ports {data_addr_wire_out[31]}]
 set_load -pin_load -max 0.1 [get_ports {data_addr_wire_out[31]}]
 set_load -pin_load -min 0.01 [get_ports {data_addr_wire_out[30]}]

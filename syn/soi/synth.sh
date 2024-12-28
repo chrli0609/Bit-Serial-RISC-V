@@ -2,5 +2,36 @@
 
 source init_s2424.sh
 
-genus -files $1 -files synt.tcl
 
+min_clk_period=100
+max_clk_period=1000
+num_x_steps=10
+
+
+MODELS=("BRISC_top_no_io" "RISC_V_Cached" "serv_synth_wrapper")
+
+
+
+incr=$( bc <<< "($max_clk_period-$min_clk_period)/$num_x_steps" )
+x_vals=($(seq $min_clk_period $incr $max_clk_period))
+
+
+for model in ${MODELS[@]}
+do
+	for clk_period in ${x_vals[@]}
+	do
+		genus -files $model.g -files synt.tcl -execute "set CLOCK_PERIOD $clk_period"  -batch
+	done
+done
+
+
+#echo "{#x_vals[@]}: ${#x_vals}"
+> clk_period_samples.txt
+for ((i=0; i<${#x_vals[@]}; i++));
+do
+	echo "${x_vals[$i]}" >> clk_period_samples.txt
+done
+
+
+
+python extract_ppa.py

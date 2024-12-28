@@ -1,6 +1,6 @@
 ######################################################################
 
-# Created by Genus(TM) Synthesis Solution 21.19-s055_1 on Thu Dec 26 01:29:36 CET 2024
+# Created by Genus(TM) Synthesis Solution 21.19-s055_1 on Sat Dec 28 20:24:14 CET 2024
 
 # This file contains the Genus script for design:BRISC_top_no_io
 
@@ -15,13 +15,13 @@ set_db -quiet phys_use_invs_extraction true
 set_db -quiet phys_route_time_out 120.0
 set_db -quiet capacitance_per_unit_length_mmmc {}
 set_db -quiet resistance_per_unit_length_mmmc {}
-set_db -quiet runtime_by_stage {{PBS_Generic-Start 0 72 0.0 69.0} {to_generic 115 193 122 197} {first_condense 73 284 91 314} {PBS_Generic_Opt-Post 229 301 232.94683700000002 301.946837} {{PBS_Generic-Postgen HBO Optimizations} 0 301 1.0 302.946837} {PBS_TechMap-Start 0 302 0.0 302.946837} {{PBS_TechMap-Premap HBO Optimizations} 0 302 1.0 303.946837} {second_condense 54 357 65 400} {reify 35 392 63 463} {global_incr_map 28 420 32 497} {{PBS_Techmap-Global Mapping} 119 421 122.28674499999983 426.23358199999984} {{PBS_TechMap-Datapath Postmap Operations} 3 425 3.553021000000058 429.7866029999999} {{PBS_TechMap-Postmap HBO Optimizations} 0 425 0.5461730000000102 430.3327759999999} {{PBS_TechMap-Postmap Clock Gating} 1 426 1.0 431.3327759999999} {{PBS_TechMap-Postmap Cleanup} 1 427 0.5281640000000039 431.8609399999999} {PBS_Techmap-Post_MBCI 0 427 0.0 431.8609399999999} {incr_opt 24 452 25 532} }
+set_db -quiet runtime_by_stage {{PBS_Generic-Start 0 70 0.0 69.0} {to_generic 114 190 121 197} {first_condense 69 276 86 307} {PBS_Generic_Opt-Post 220 290 224.93165199999999 293.931652} {{PBS_Generic-Postgen HBO Optimizations} 1 291 1.0 294.931652} {PBS_TechMap-Start 0 292 0.0 295.931652} {{PBS_TechMap-Premap HBO Optimizations} 0 292 0.0 295.931652} {second_condense 58 350 69 395} {reify 39 389 70 466} {global_incr_map 32 421 37 503} {{PBS_Techmap-Global Mapping} 130 422 133.09560499999986 429.02725699999985} {{PBS_TechMap-Datapath Postmap Operations} 3 425 3.5120050000000447 432.5392619999999} {{PBS_TechMap-Postmap HBO Optimizations} 1 426 0.553338999999994 433.0926009999999} {{PBS_TechMap-Postmap Clock Gating} 1 427 1.0 434.0926009999999} {{PBS_TechMap-Postmap Cleanup} 0 427 0.487782999999979 434.58038399999987} {PBS_Techmap-Post_MBCI 0 427 1.0 435.58038399999987} {incr_opt 26 455 29 541} }
 set_db -quiet timing_adjust_tns_of_complex_flops false
 set_db -quiet hdl_error_on_latch true
 set_db -quiet hdl_error_on_blackbox true
 set_db -quiet tinfo_tstamp_file .rs_christopher.tstamp
 set_db -quiet metric_enable true
-set_db -quiet flow_metrics_snapshot_uuid 3053cf38-8a90-424f-b3ce-71ae62168618
+set_db -quiet flow_metrics_snapshot_uuid f7e936ef-d643-4b19-bef4-139cdef0deed
 set_db -quiet phys_use_segment_parasitics true
 set_db -quiet probabilistic_extraction true
 set_db -quiet ple_correlation_factors {1.9000 2.0000}
@@ -35,7 +35,7 @@ set_db -quiet operating_condition:default_emulate_libset_max/KISTA_SOI_STDLIB2_C
 set_db -quiet operating_condition:default_emulate_libset_max/KISTA_SOI_STDLIB2_CCS_TT/_nominal_ .tree_type balanced_tree
 # BEGIN MSV SECTION
 # END MSV SECTION
-define_clock -name CLK -domain domain_1 -period 100000.0 -divide_period 1 -rise 0 -divide_rise 1 -fall 1 -divide_fall 2 -remove -design design:BRISC_top_no_io port:BRISC_top_no_io/clk
+define_clock -name CLK -domain domain_1 -period 1000000.0 -divide_period 1 -rise 0 -divide_rise 1 -fall 1 -divide_fall 2 -remove -design design:BRISC_top_no_io port:BRISC_top_no_io/clk
 set_db -quiet clock:BRISC_top_no_io/CLK .clock_network_early_latency {200.0 200.0 200.0 200.0}
 set_db -quiet clock:BRISC_top_no_io/CLK .clock_network_late_latency {200.0 200.0 200.0 200.0}
 set_db -quiet clock:BRISC_top_no_io/CLK .clock_setup_uncertainty {300.0 300.0}
@@ -700,7 +700,7 @@ set_db -quiet dft_scan_style muxed_scan
 set_db -quiet dft_scanbit_waveform_analysis false
 # END DFT SECTION
 set_db -quiet design:BRISC_top_no_io .seq_reason_deleted_internal {{{U4/U0/FIFO_s_data[16]} unloaded {U4/U0/FIFO_s_data[16]}} {{U4/U0/FIFO_s_data[17]} unloaded {U4/U0/FIFO_s_data[17]}} {{U4/U0/FIFO_s_data[18]} unloaded {U4/U0/FIFO_s_data[18]}} {{U4/U0/FIFO_s_data[19]} unloaded {U4/U0/FIFO_s_data[19]}} {{U4/U0/FIFO_s_data[20]} unloaded {U4/U0/FIFO_s_data[20]}} {{U4/U0/FIFO_s_data[21]} unloaded {U4/U0/FIFO_s_data[21]}} {{U4/U0/FIFO_s_data[22]} unloaded {U4/U0/FIFO_s_data[22]}} {{U4/U0/FIFO_s_data[23]} unloaded {U4/U0/FIFO_s_data[23]}} {{U4/U0/FIFO_s_data[24]} unloaded {U4/U0/FIFO_s_data[24]}} {{U4/U0/FIFO_s_data[25]} unloaded {U4/U0/FIFO_s_data[25]}} {{U4/U0/FIFO_s_data[26]} unloaded {U4/U0/FIFO_s_data[26]}} {{U4/U0/FIFO_s_data[27]} unloaded {U4/U0/FIFO_s_data[27]}} {{U4/U0/FIFO_s_data[28]} unloaded {U4/U0/FIFO_s_data[28]}} {{U4/U0/FIFO_s_data[29]} unloaded {U4/U0/FIFO_s_data[29]}} {{U4/U0/FIFO_s_data[30]} unloaded {U4/U0/FIFO_s_data[30]}} {{U4/U0/shift_imm_internal_reg[0]} unloaded {U4/U0/shift_imm_internal[0]}} {{U4/U0/shift_imm_internal_reg[1]} unloaded {U4/U0/shift_imm_internal[1]}} {{U4/U0/shift_imm_internal_reg[2]} unloaded {U4/U0/shift_imm_internal[2]}} {{U4/U0/shift_imm_internal_reg[3]} unloaded {U4/U0/shift_imm_internal[3]}} {{U4/U0/shift_imm_internal_reg[4]} unloaded {U4/U0/shift_imm_internal[4]}} {{U4/result_ready_execution_reg[0]} {{merged with U4/execution_enable_reset_reg[0]}} {U4/result_ready_execution[0]} {U4/execution_enable_reset[0]}} {{U4/writeback_enable_reset_reg[0]} {{merged with U4/load_writeback_enable_reset2_reg[0]}} {U4/writeback_enable_reset[0]} {U4/load_writeback_enable_reset2[0]}} {{U4/writeback_enable_reg[0]} {{merged with U4/need_writeback_reset_reg[0]}} {U4/writeback_enable[0]} {U4/need_writeback_reset[0]}} {{U4/U0_branch_bus_internal_reg[12]} {{constant 0}} {U4/U0/branch_bus_internal[12]}} {{U4/U0_branch_bus_internal_reg[13]} {{constant 0}} {U4/U0/branch_bus_internal[13]}} {{U4/U0_branch_bus_internal_reg[14]} {{constant 0}} {U4/U0/branch_bus_internal[14]}} {{U4/U0_branch_bus_internal_reg[15]} {{constant 0}} {U4/U0/branch_bus_internal[15]}} {{U4/U0_branch_bus_internal_reg[16]} {{constant 0}} {U4/U0/branch_bus_internal[16]}} {{U4/U0_branch_bus_internal_reg[17]} {{constant 0}} {U4/U0/branch_bus_internal[17]}} {{U4/U0_branch_bus_internal_reg[18]} {{constant 0}} {U4/U0/branch_bus_internal[18]}} {{U4/U0_branch_bus_internal_reg[19]} {{constant 0}} {U4/U0/branch_bus_internal[19]}} {{U4/U0_branch_bus_internal_reg[20]} {{constant 0}} {U4/U0/branch_bus_internal[20]}} {{U4/U0_branch_bus_internal_reg[21]} {{constant 0}} {U4/U0/branch_bus_internal[21]}} {{U4/U0_branch_bus_internal_reg[22]} {{constant 0}} {U4/U0/branch_bus_internal[22]}} {{U4/U0_branch_bus_internal_reg[23]} {{constant 0}} {U4/U0/branch_bus_internal[23]}} {{U4/U0_branch_bus_internal_reg[24]} {{constant 0}} {U4/U0/branch_bus_internal[24]}} {{U4/U0_branch_bus_internal_reg[25]} {{constant 0}} {U4/U0/branch_bus_internal[25]}} {{U4/U0_branch_bus_internal_reg[26]} {{constant 0}} {U4/U0/branch_bus_internal[26]}} {{U4/U0_branch_bus_internal_reg[27]} {{constant 0}} {U4/U0/branch_bus_internal[27]}} {{U4/U0_branch_bus_internal_reg[28]} {{constant 0}} {U4/U0/branch_bus_internal[28]}} {{U4/U0_branch_bus_internal_reg[29]} {{constant 0}} {U4/U0/branch_bus_internal[29]}} {{U4/U0_branch_bus_internal_reg[30]} {{constant 0}} {U4/U0/branch_bus_internal[30]}} {{U4/U0_branch_bus_internal_reg[31]} {{constant 0}} {U4/U0/branch_bus_internal[31]}} {{U4/U0_lui_result_internal_reg[0]} {{constant 0}} {U4/U0/lui_result_internal[0]}} {{U4/U0_lui_result_internal_reg[1]} {{constant 0}} {U4/U0/lui_result_internal[1]}} {{U4/U0_lui_result_internal_reg[2]} {{constant 0}} {U4/U0/lui_result_internal[2]}} {{U4/U0_lui_result_internal_reg[3]} {{constant 0}} {U4/U0/lui_result_internal[3]}} {{U4/U0_lui_result_internal_reg[4]} {{constant 0}} {U4/U0/lui_result_internal[4]}} {{U4/U0_lui_result_internal_reg[5]} {{constant 0}} {U4/U0/lui_result_internal[5]}} {{U4/U0_lui_result_internal_reg[6]} {{constant 0}} {U4/U0/lui_result_internal[6]}} {{U4/U0_lui_result_internal_reg[7]} {{constant 0}} {U4/U0/lui_result_internal[7]}} {{U4/U0_lui_result_internal_reg[8]} {{constant 0}} {U4/U0/lui_result_internal[8]}} {{U4/U0_lui_result_internal_reg[9]} {{constant 0}} {U4/U0/lui_result_internal[9]}} {{U4/U0_lui_result_internal_reg[10]} {{constant 0}} {U4/U0/lui_result_internal[10]}} {{U4/U0_lui_result_internal_reg[11]} {{constant 0}} {U4/U0/lui_result_internal[11]}} {{U3/counter_reg[0]} {{constant 0}} {U3/counter[0]}} {{U4/U0_send_clk_internal_reg[0]} {{constant 1}} {U4/U0/send_clk_internal[0]}} {{U4/U0_op2_alt_internal_reg[22]} {{merged with U4/U0_op2_alt_internal_reg[21]}} {U4/U0/op2_alt_internal[22]} {U4/U0/op2_alt_internal[21]}} {{U4/U0_op2_alt_internal_reg[23]} {{merged with U4/U0_op2_alt_internal_reg[21]}} {U4/U0/op2_alt_internal[23]} {U4/U0/op2_alt_internal[21]}} {{U4/U0_op2_alt_internal_reg[24]} {{merged with U4/U0_op2_alt_internal_reg[21]}} {U4/U0/op2_alt_internal[24]} {U4/U0/op2_alt_internal[21]}} {{U4/U0_op2_alt_internal_reg[25]} {{merged with U4/U0_op2_alt_internal_reg[21]}} {U4/U0/op2_alt_internal[25]} {U4/U0/op2_alt_internal[21]}} {{U4/U0_op2_alt_internal_reg[26]} {{merged with U4/U0_op2_alt_internal_reg[21]}} {U4/U0/op2_alt_internal[26]} {U4/U0/op2_alt_internal[21]}} {{U4/U0_op2_alt_internal_reg[27]} {{merged with U4/U0_op2_alt_internal_reg[21]}} {U4/U0/op2_alt_internal[27]} {U4/U0/op2_alt_internal[21]}} {{U4/U0_op2_alt_internal_reg[28]} {{merged with U4/U0_op2_alt_internal_reg[21]}} {U4/U0/op2_alt_internal[28]} {U4/U0/op2_alt_internal[21]}} {{U4/U0_op2_alt_internal_reg[29]} {{merged with U4/U0_op2_alt_internal_reg[21]}} {U4/U0/op2_alt_internal[29]} {U4/U0/op2_alt_internal[21]}} {{U4/U0_op2_alt_internal_reg[30]} {{merged with U4/U0_op2_alt_internal_reg[21]}} {U4/U0/op2_alt_internal[30]} {U4/U0/op2_alt_internal[21]}} {{U4/U0_op2_alt_internal_reg[31]} {{merged with U4/U0_op2_alt_internal_reg[21]}} {U4/U0/op2_alt_internal[31]} {U4/U0/op2_alt_internal[21]}} {{U4/U0_load_result_internal_reg[31]} {{merged with U4/U0_load_result_internal_reg[30]}} {U4/U0/load_result_internal[31]} {U4/U0/load_result_internal[30]}}}
-set_db -quiet design:BRISC_top_no_io .qos_by_stage {{to_generic {wns -11111111} {tns -111111111} {vep -111111111} {area 33613760} {cell_count 15688} {utilization  0.00} {runtime 115 193 122 197} }{first_condense {wns -11111111} {tns -111111111} {vep -111111111} {area 32144781} {cell_count 22189} {utilization  0.00} {runtime 73 284 91 314} }{second_condense {wns -11111111} {tns -111111111} {vep -111111111} {area 29185696} {cell_count 19808} {utilization  0.00} {runtime 54 357 65 400} }{reify {wns 14363} {tns 0} {vep 0} {area 20428640} {cell_count 20950} {utilization  0.00} {runtime 35 392 63 464} }{global_incr_map {wns 12168} {tns 0} {vep 0} {area 17362240} {cell_count 15788} {utilization  0.00} {runtime 28 420 32 497} }{incr_opt {wns 214748365} {tns 0} {vep 0} {area 17204480} {cell_count 15398} {utilization  0.00} {runtime 24 452 25 532} }}
+set_db -quiet design:BRISC_top_no_io .qos_by_stage {{to_generic {wns -11111111} {tns -111111111} {vep -111111111} {area 33613760} {cell_count 15688} {utilization  0.00} {runtime 114 190 121 197} }{first_condense {wns -11111111} {tns -111111111} {vep -111111111} {area 31912379} {cell_count 22002} {utilization  0.00} {runtime 69 276 86 307} }{second_condense {wns -11111111} {tns -111111111} {vep -111111111} {area 29060174} {cell_count 19707} {utilization  0.00} {runtime 58 350 69 395} }{reify {wns 480176} {tns 0} {vep 0} {area 20160160} {cell_count 21715} {utilization  0.00} {runtime 39 389 70 466} }{global_incr_map {wns 483248} {tns 0} {vep 0} {area 17601920} {cell_count 16397} {utilization  0.00} {runtime 32 421 37 503} }{incr_opt {wns 214748365} {tns 0} {vep 0} {area 17264000} {cell_count 15597} {utilization  0.00} {runtime 26 455 29 541} }}
 set_db -quiet design:BRISC_top_no_io .seq_mbci_coverage 0.0
 set_db -quiet design:BRISC_top_no_io .hdl_user_name BRISC_top_no_io
 set_db -quiet design:BRISC_top_no_io .hdl_filelist {{default -vhdl1993 {SYNTHESIS} {/home/christopher/Bit-Serial-RISC-V/source/brisc/program_package.vhdl} {/home/christopher/Bit-Serial-RISC-V/syn/soi/../../source/brisc/} {}} {default -vhdl1993 {SYNTHESIS} {/home/christopher/Bit-Serial-RISC-V/source/brisc/types_pkg.vhd} {/home/christopher/Bit-Serial-RISC-V/syn/soi/../../source/brisc/} {}} {default -vhdl1993 {SYNTHESIS} {/home/christopher/Bit-Serial-RISC-V/source/brisc/CiscV.vhdl} {/home/christopher/Bit-Serial-RISC-V/syn/soi/../../source/brisc/} {}} {default -vhdl1993 {SYNTHESIS} {/home/christopher/Bit-Serial-RISC-V/source/brisc/bs_interface.vhd} {/home/christopher/Bit-Serial-RISC-V/syn/soi/../../source/brisc/} {}} {default -vhdl1993 {SYNTHESIS} {/home/christopher/Bit-Serial-RISC-V/source/brisc/BRISC_top_no_io.vhdl} {/home/christopher/Bit-Serial-RISC-V/syn/soi/../../source/brisc/} {}}}
@@ -1711,6 +1711,12 @@ set_db -quiet {inst:BRISC_top_no_io/U4/last_pc_sel_reg[0]} .single_bit_orig_name
 set_db -quiet {inst:BRISC_top_no_io/U4/last_pc_sel_reg[0]} .gint_phase_inversion false
 set_db -quiet {pin:BRISC_top_no_io/U4/last_pc_sel_reg[0]/Q} .original_name {U4/last_pc_sel[0]/q}
 set_db -quiet {pin:BRISC_top_no_io/U4/last_pc_sel_reg[0]/QN} .original_name {U4/last_pc_sel[0]/q}
+set_db -quiet {inst:BRISC_top_no_io/U4/last_pc_sel_reg[1]} .original_name {{U4/last_pc_sel[1]}}
+set_db -quiet {inst:BRISC_top_no_io/U4/last_pc_sel_reg[1]} .orig_hdl_instantiated false
+set_db -quiet {inst:BRISC_top_no_io/U4/last_pc_sel_reg[1]} .single_bit_orig_name {U4/last_pc_sel[1]}
+set_db -quiet {inst:BRISC_top_no_io/U4/last_pc_sel_reg[1]} .gint_phase_inversion false
+set_db -quiet {pin:BRISC_top_no_io/U4/last_pc_sel_reg[1]/Q} .original_name {U4/last_pc_sel[1]/q}
+set_db -quiet {pin:BRISC_top_no_io/U4/last_pc_sel_reg[1]/QN} .original_name {U4/last_pc_sel[1]/q}
 set_db -quiet {inst:BRISC_top_no_io/U4/last_pc_sel_reg[2]} .original_name {{U4/last_pc_sel[2]}}
 set_db -quiet {inst:BRISC_top_no_io/U4/last_pc_sel_reg[2]} .orig_hdl_instantiated false
 set_db -quiet {inst:BRISC_top_no_io/U4/last_pc_sel_reg[2]} .single_bit_orig_name {U4/last_pc_sel[2]}
@@ -3229,12 +3235,6 @@ set_db -quiet {inst:BRISC_top_no_io/U4/execution_enable_reset_reg[0]} .single_bi
 set_db -quiet {inst:BRISC_top_no_io/U4/execution_enable_reset_reg[0]} .gint_phase_inversion false
 set_db -quiet {pin:BRISC_top_no_io/U4/execution_enable_reset_reg[0]/Q} .original_name {U4/execution_enable_reset[0]/q}
 set_db -quiet {pin:BRISC_top_no_io/U4/execution_enable_reset_reg[0]/QN} .original_name {U4/execution_enable_reset[0]/q}
-set_db -quiet {inst:BRISC_top_no_io/U4/last_pc_sel_reg[1]} .original_name {{U4/last_pc_sel[1]}}
-set_db -quiet {inst:BRISC_top_no_io/U4/last_pc_sel_reg[1]} .orig_hdl_instantiated false
-set_db -quiet {inst:BRISC_top_no_io/U4/last_pc_sel_reg[1]} .single_bit_orig_name {U4/last_pc_sel[1]}
-set_db -quiet {inst:BRISC_top_no_io/U4/last_pc_sel_reg[1]} .gint_phase_inversion false
-set_db -quiet {pin:BRISC_top_no_io/U4/last_pc_sel_reg[1]/Q} .original_name {U4/last_pc_sel[1]/q}
-set_db -quiet {pin:BRISC_top_no_io/U4/last_pc_sel_reg[1]/QN} .original_name {U4/last_pc_sel[1]/q}
 set_db -quiet {inst:BRISC_top_no_io/U4/load_writeback_enable_buffer2_reg[0]} .original_name {{U4/load_writeback_enable_buffer2[0]}}
 set_db -quiet {inst:BRISC_top_no_io/U4/load_writeback_enable_buffer2_reg[0]} .orig_hdl_instantiated false
 set_db -quiet {inst:BRISC_top_no_io/U4/load_writeback_enable_buffer2_reg[0]} .single_bit_orig_name {U4/load_writeback_enable_buffer2[0]}
@@ -10365,7 +10365,7 @@ set_db -quiet source_verbose true
 ##
 ## Written by Genus(TM) Synthesis Solution version 21.19-s055_1
 ## flowkit v21.12-s019_1
-## Written on 01:29:37 26-Dec 2024
+## Written on 20:24:16 28-Dec 2024
 #############################################################
 #####   Flow Definitions   ##################################
 
@@ -10420,7 +10420,7 @@ if {[is_attribute flow_step_next -obj_type root]} {set_db flow_step_next {}}
 if {[is_attribute flow_working_directory -obj_type root]} {set_db flow_working_directory .}
 if {[is_attribute flow_branch -obj_type root]} {set_db flow_branch {}}
 if {[is_attribute flow_caller_data -obj_type root]} {set_db flow_caller_data {}}
-if {[is_attribute flow_metrics_snapshot_uuid -obj_type root]} {set_db flow_metrics_snapshot_uuid 3053cf38-8a90-424f-b3ce-71ae62168618}
+if {[is_attribute flow_metrics_snapshot_uuid -obj_type root]} {set_db flow_metrics_snapshot_uuid f7e936ef-d643-4b19-bef4-139cdef0deed}
 if {[is_attribute flow_starting_db -obj_type root]} {set_db flow_starting_db {}}
 if {[is_attribute flow_db_directory -obj_type root]} {set_db flow_db_directory dbs}
 if {[is_attribute flow_report_directory -obj_type root]} {set_db flow_report_directory reports}
