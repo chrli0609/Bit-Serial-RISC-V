@@ -72,9 +72,9 @@ def is_power_line(components_list):
 	return True	
 
 
-def read_area(filename):
+def read_area(filename, design_name):
 	
-	design_name = get_design_name(filename)
+	#design_name = get_design_name(filename)
 
 	file = open(filename, "r")
 	
@@ -82,7 +82,7 @@ def read_area(filename):
 		print("incoming line:", line)
 		line = line.strip()
 		components_list = line.split()
-		
+		print("is_area_line:", is_area_line(components_list, design_name))
 		if is_area_line(components_list, design_name):
 			area_value = components_list[TOT_AREA_IDX]
 			num_gates_value = components_list[NUM_GATES_IDX]
@@ -90,6 +90,7 @@ def read_area(filename):
 
 	#We have wrong is_area_line if we get here
 	print("Error: Area line not found at all, most likely error in is_area_line()")
+	exit()
 	return None
 
 
@@ -154,24 +155,42 @@ def get_filepath(rpt_dir, model_name, clk_period, stat_type):
 
 
 
-def main():
+def summarize_txt(stat_type):
+	
 
 
 	#Get clk_period_samples
 	clk_period_samples = read_clk_period_samples("clk_period_samples.txt")
 
-	power_matrix = []
+	val_matrix = []
 	for model_name in MODELS:
 		tmp = []
 		for clk_period in clk_period_samples:
-			tmp.append(read_power(get_filepath(RPT_DIR, model_name, clk_period, "power")))
+			if stat_type == "power":
+				tmp.append(read_power(get_filepath(RPT_DIR, model_name, clk_period, stat_type)))
+			elif stat_type == "area":
+				tmp.append(read_area(get_filepath(RPT_DIR, model_name, clk_period, stat_type), model_name)[0])
+			else:
+				print("Invalid stat_type, please choose either 'power' or 'area'")
+				exit()
 
-		power_matrix.append(tmp)
+		val_matrix.append(tmp)
 
 
 
 	for i in range(len(MODELS)):
-		write_to_file(MODELS[i]+"_vals.txt", power_matrix[i])
+		write_to_file(MODELS[i]+"_"+stat_type+"_vals.txt", val_matrix[i])
+
+
+
+
+def main():
+	summarize_txt("power")
+	summarize_txt("area")
+
+
+
+main()
 			
 			
 
