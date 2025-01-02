@@ -18,7 +18,7 @@ MODELS = ["BRISC_top_no_io", "RISC_V_Cached", "serv_synth_wrapper"]
 
 #MODELS = ["serv_synth_wrapper"]
 
-
+WRITE_TYPE = "w"
 
 TOT_AREA_IDX = 4
 NUM_GATES_IDX = 1 
@@ -51,13 +51,9 @@ def get_design_name(filepath):
 
 def is_area_line(components_list, design_name):
 	
-	print("components_list", components_list)
-	print("design name:", design_name)
 	if len(components_list) != 7:
-		print("1")
 		return False
 	if components_list[0] != design_name:
-		print("2")
 		return False
 	return True	
 
@@ -79,10 +75,8 @@ def read_area(filename, design_name):
 	file = open(filename, "r")
 	
 	for line in file:
-		print("incoming line:", line)
 		line = line.strip()
 		components_list = line.split()
-		print("is_area_line:", is_area_line(components_list, design_name))
 		if is_area_line(components_list, design_name):
 			area_value = components_list[TOT_AREA_IDX]
 			num_gates_value = components_list[NUM_GATES_IDX]
@@ -111,7 +105,7 @@ def read_power(filename):
 
 
 def write_to_file(filename, values_list):
-	file = open(filename, "w")
+	file = open(filename, WRITE_TYPE)
 	
 	for value in values_list:
 		file.write(value + "\n") 
@@ -190,18 +184,4 @@ def main():
 
 
 
-main()
-			
-			
-
-	
-	
-	
-	
-	
-
-
-	
-			
-		
 main()
