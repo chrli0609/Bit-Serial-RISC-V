@@ -202,12 +202,17 @@ def summarize_txt(stat_type):
 
 
 def main():
+
 	summarize_txt("power")
-	print("Power summarized in:", SUMMARY_DIR)
+	print("Power summarized in: " + SUMMARY_DIR)
+
+
 	summarize_txt("area")
-	print("Area summarized in:", SUMMARY_DIR)
+	print("Area summarized in:" + SUMMARY_DIR)
+
+
 	summarize_txt("timing")
-	print("Timing summarized in:", SUMMARY_DIR)
+	print("Timing summarized in:" + SUMMARY_DIR)
 
 
 

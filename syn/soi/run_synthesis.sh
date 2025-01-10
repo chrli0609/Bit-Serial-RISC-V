@@ -4,25 +4,23 @@ source ./init_s2424.sh
 
 
 
-# IGNORE
-':
-f=1
-l=10
-n=9
+##### IGNORE ####
 
-i=$( bc <<< "($l-$f)/$n" )
+#f=1
+#l=10
+#n=9
 
-declare -a x_vals_first=($(seq $f $i $l))
+#i=$( bc <<< "($l-$f)/$n" )
+
+#declare -a x_vals_first=($(seq $f $i $l))
 #unset 'x_vals[${#x_vals[@]}-1]'
+
+################
+
 
 min_clk_period=10
 max_clk_period=1000
 num_x_steps=100
-'
-:
-#######
-
-
 
 
 MODELS=("BRISC_top_no_io" "RISC_V_Cached" "serv_synth_wrapper")
@@ -55,8 +53,7 @@ do
 		#echo "POWER_FILE: $POWER_FILE"
 		
 		if [[ -f $AREA_FILE ]] && [[ -f $POWER_FILE ]]; then
- # 			 echo "Files $AREA_FILE and $POWER_FILE exists."
-			:
+  			 echo "Files $AREA_FILE and $POWER_FILE exists."
 		else
 	#		echo "Files $AREA_FILE and $POWER_FILE does not exist."
 			genus -files $model.g -files synth_scr/synt.tcl -execute "set CLOCK_PERIOD $clk_period"  -batch
@@ -76,10 +73,10 @@ done
 
 
 #Summarize Power, Area and Slack for each clock period
-python extract_ppa.py
+python data_processing_scripts/extract_ppa.py
 
 
 #Plot
-python plot_ppa
+#python data_processing_scripts/plot_ppa.py
 
 
