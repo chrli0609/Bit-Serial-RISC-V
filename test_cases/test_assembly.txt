@@ -1,0 +1,19 @@
+lui a7,1
+lui sp,7
+lui gp,6
+add t1,sp,a7
+add x1,t1,x0 #check register
+sub x4,sp,gp
+add x1,x4,x0 #check register
+addi t2,t1,20
+add x1,t2,x0 #check register
+and t0,sp,gp
+add x1,t0,x0 #check register
+or x8,t0,t1
+add x1,x8,x0 #check register
+lui x9, 0
+addi x9, x9, 1
+sra x10,x8,x9
+add x1,x10,x0 #check register
+srl x11,x10,x9
+add x1,x11,x0 #check register

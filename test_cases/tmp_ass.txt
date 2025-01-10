@@ -1,0 +1,11 @@
+lui a7,1
+lui sp,7
+lui gp,6
+add t1,sp,a7
+sub x4,sp,gp
+addi t2,t1,20
+and t0,sp,gp
+or x8,t1,t2
+lui x9, 0
+addi x9, x9, 1
+sra x10,x8,x9
