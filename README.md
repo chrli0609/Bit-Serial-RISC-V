@@ -28,9 +28,7 @@ Summary data values shown in
 syn/soi/synth_summary
 
 
-# Plots 
 
-syn/soi/plots
 
 
 
